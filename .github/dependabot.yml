@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # Configure updates for pnpm workspace ecosystem
+  - package-ecosystem: 'npm'
+    # This targets the root and searches any sub-packages defined in your workspace layout
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'saturday'
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    # Enforces updating the workspace settings altogether
+    target-branch: 'main'
+
+    # 👇 ADD THIS GROUPS BLOCK TO LOWER THE NOISE
+    groups:
+      grouped-dependencies:
+        patterns:
+          - '*' # Matches any package name
+
+  # Track your GitHub Actions versions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'

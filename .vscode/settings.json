@@ -1,0 +1,18 @@
+{
+  "stylelint.validate": ["css", "scss"],
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "workbench.editor.customLabels.patterns": {
+    "**/index**": "${dirname}/index.${extname}",
+    "**/types**": "${dirname}/types.${extname}",
+    "**/utilities**": "${dirname}/utilities.${extname}",
+    "**/route.tsx": "${dirname}/route.tsx"
+  }
+}

@@ -1,0 +1,12 @@
+packages:
+  - .
+
+allowBuilds:
+  esbuild: true
+  lightningcss: true
+  '@parcel/watcher': true
+  unrs-resolver: true
+
+settings:
+  minimumReleaseAge: 10080 # 1 week in minutes
+  ignoreWorkspaceRootCheck: true

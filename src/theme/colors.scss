@@ -1,0 +1,100 @@
+@layer theme {
+  :root {
+    --color-gray-50: oklch(98% 0.25% 264deg);
+    --color-gray-100: oklch(12% 9.5% 264deg / 5%);
+    --color-gray-200: oklch(12% 9% 264deg / 7%);
+    --color-gray-300: oklch(12% 8.5% 264deg / 17%);
+    --color-gray-400: oklch(12% 8% 264deg / 38%);
+    --color-gray-500: oklch(12% 7.5% 264deg / 50%);
+    --color-gray-600: oklch(12% 7% 264deg / 67%);
+    --color-gray-700: oklch(12% 6% 264deg / 77%);
+    --color-gray-800: oklch(12% 5% 264deg / 85%);
+    --color-gray-900: oklch(12% 5% 264deg / 90%);
+    --color-gray-950: oklch(12% 5% 264deg / 95%);
+
+    --color-bg: oklch(99% 0.25% 264deg);
+    --color-bg-subtle: oklch(96% 0.5% 264deg);
+    --color-bg-elevated: oklch(93% 0.75% 264deg);
+
+    --color-fg: oklch(14% 5% 264deg);
+    --color-fg-muted: oklch(40% 3% 264deg);
+    --color-fg-subtle: oklch(58% 2% 264deg);
+
+    --color-border: oklch(12% 8.5% 264deg / 17%);
+    --color-border-strong: oklch(12% 8% 264deg / 38%);
+
+    --color-primary: oklch(52% 55% 255deg);
+    --color-primary-hover: oklch(46% 55% 255deg);
+    --color-primary-fg: oklch(99% 0% 0deg);
+
+    --color-danger: oklch(52% 58% 27deg);
+    --color-danger-hover: oklch(46% 58% 27deg);
+    --color-danger-fg: oklch(99% 0% 0deg);
+
+    --color-success: oklch(55% 55% 145deg);
+    --color-success-hover: oklch(49% 55% 145deg);
+    --color-success-fg: oklch(99% 0% 0deg);
+
+    --color-warning: oklch(68% 60% 75deg);
+    --color-warning-hover: oklch(62% 60% 75deg);
+    --color-warning-fg: oklch(14% 5% 264deg);
+
+    --color-icon: var(--color-fg-muted);
+    --color-icon-subtle: var(--color-fg-subtle);
+
+    --color-hover: oklch(12% 5% 264deg / 5%);
+    --color-hover-strong: oklch(12% 5% 264deg / 10%);
+
+    --color-disabled-bg: oklch(12% 5% 264deg / 5%);
+    --color-disabled-fg: var(--color-fg-subtle);
+    --color-disabled-border: oklch(12% 5% 264deg / 10%);
+
+    &[data-theme='dark'] {
+      --color-gray-50: oklch(17% 0.25% 264deg);
+      --color-gray-100: oklch(28% 0.75% 264deg / 65%);
+      --color-gray-200: oklch(29% 0.75% 264deg / 80%);
+      --color-gray-300: oklch(35% 0.75% 264deg / 80%);
+      --color-gray-400: oklch(47% 0.875% 264deg / 80%);
+      --color-gray-500: oklch(64% 1% 264deg / 80%);
+      --color-gray-600: oklch(82% 1% 264deg / 80%);
+      --color-gray-700: oklch(92% 1.125% 264deg / 80%);
+      --color-gray-800: oklch(93% 0.875% 264deg / 85%);
+      --color-gray-900: oklch(95% 0.5% 264deg / 90%);
+      --color-gray-950: oklch(94% 0.375% 264deg / 95%);
+
+      --color-bg: oklch(14% 1% 264deg);
+      --color-bg-subtle: oklch(18% 1.5% 264deg);
+      --color-bg-elevated: oklch(22% 1.5% 264deg);
+
+      --color-fg: oklch(94% 0.375% 264deg);
+      --color-fg-muted: oklch(75% 1% 264deg);
+      --color-fg-subtle: oklch(58% 1% 264deg);
+
+      --color-border: oklch(35% 0.75% 264deg / 80%);
+      --color-border-strong: oklch(47% 0.875% 264deg / 80%);
+
+      --color-primary: oklch(62% 52% 255deg);
+      --color-primary-hover: oklch(68% 44% 255deg);
+      --color-primary-fg: oklch(99% 0% 0deg);
+
+      --color-danger: oklch(60% 52% 27deg);
+      --color-danger-hover: oklch(65% 44% 27deg);
+      --color-danger-fg: oklch(99% 0% 0deg);
+
+      --color-success: oklch(65% 52% 145deg);
+      --color-success-hover: oklch(70% 44% 145deg);
+      --color-success-fg: oklch(99% 0% 0deg);
+
+      --color-warning: oklch(76% 55% 75deg);
+      --color-warning-hover: oklch(81% 47% 75deg);
+      --color-warning-fg: oklch(14% 5% 264deg);
+
+      --color-hover: oklch(100% 0% 0deg / 5%);
+      --color-hover-strong: oklch(100% 0% 0deg / 10%);
+
+      --color-disabled-bg: oklch(100% 0% 0deg / 5%);
+      --color-disabled-fg: var(--color-fg-subtle);
+      --color-disabled-border: oklch(100% 0% 0deg / 10%);
+    }
+  }
+}
