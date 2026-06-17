@@ -1,3 +1,5 @@
+import * as z from 'zod/v4'
+
 // ─── Search Filter ──────────────────────────────────────────────────────────
 // Drives both the form state and the SAP API request params.
 
@@ -5,13 +7,13 @@ export interface FoodLogsFilter {
   // Mandatory
   foodBoard: string // STNUM  — Food Board number
   alternative: string // ALTNR  — Alternative number
-  dateFrom: string // DATUM  — From Change Date (YYYYMMDD). Default: yesterday.
+  dateFrom: Date // DATUM  — From Change Date. Default: yesterday.
 
   // Optional
-  dateTo?: string // DATUM  — To Change Date (YYYYMMDD). Default: today.
+  dateTo?: Date // DATUM  — To Change Date. Default: today.
   //          Range cannot exceed 6 months from dateFrom.
   material?: string // MATNR  — Material number (zero-padded CHAR18)
-  consumptionDate?: string // DATUM  — Specific consumption date (YYYYMMDD)
+  consumptionDate?: Date // DATUM  — Specific consumption date
   changeTime?: string // UZEIT  — Specific change time (HHMMSS)
   changedBy?: string // USNAM  — Username who made the change
 }
@@ -32,3 +34,21 @@ export interface FoodLog {
   oldValue: string // CDFLDVALO — Value before the change
   newValue: string // CDFLDVALO — Value after the change
 }
+
+// ─── Search Params Schema (URL state + form validation) ──────────────────────
+// Single source of truth for the search form fields, their types, and defaults.
+// Used by TanStack Router to validate URL search params and by UniForm to
+// render the search form.
+
+export const foodLogsSearchSchema = z.object({
+  foodBoard: z.string().default(''),
+  alternative: z.string().default(''),
+  dateFrom: z.coerce.date().default(() => new Date(Date.now() - 864e5)),
+  dateTo: z.coerce.date().default(() => new Date()),
+  material: z.string().optional(),
+  consumptionDate: z.coerce.date().optional(),
+  changeTime: z.string().optional(),
+  changedBy: z.string().optional(),
+})
+
+export type FoodLogsSearchParams = z.infer<typeof foodLogsSearchSchema>

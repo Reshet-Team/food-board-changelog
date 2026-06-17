@@ -7,6 +7,8 @@
 - **Skills**: a set of agent skills is available in `.agents/skills/`. Reference them when relevant.
 - **Docs**: when making config or project-wide changes, update the README and other docs if needed.
 
+Treat me as a begginer developer and explain things in a simple way. If you are providing code, please provide a short explanation of what the code does and why it is needed. When you are asking to execute commands, explain what the command does and why you need to run it.
+
 ## Stack
 
 React 19 + Vite, TanStack Router (file-based), TanStack Query, Base UI (`@base-ui/react`), SCSS Modules, TypeScript (strict), Vitest, pnpm.
@@ -62,5 +64,3 @@ src/
 ## TypeScript
 
 The project uses strict TypeScript. Avoid `any`. Prefer `interface` for object shapes and `type` for unions/aliases. `noUncheckedIndexedAccess` is enabled — handle potential `undefined` on array/object index access.
-
-
