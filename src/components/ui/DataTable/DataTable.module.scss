@@ -1,0 +1,44 @@
+@layer components {
+  .dataTableWrapper {
+    width: 100%;
+  }
+
+  .dataTableContainer {
+    overflow-x: auto;
+    position: relative;
+    border-radius: var(--radius-md);
+    width: 100%;
+
+    &[data-virtualized='true'] {
+      overflow: auto;
+      max-height: 100%;
+    }
+  }
+
+  .table {
+    &[data-expandable='true'] {
+      border-spacing: 0 calc(var(--row-gap) / 2);
+    }
+
+    &[data-virtualized='true'] {
+      display: grid;
+    }
+
+    thead th[data-column-id='expand'],
+    tbody td[data-column-id='expand'],
+    thead th[data-column-id='select'],
+    tbody td[data-column-id='select'] {
+      padding-inline: 8px;
+      width: 2rem;
+      min-width: 2rem;
+      text-align: center;
+    }
+  }
+
+  .searchInput {
+    flex: 1;
+    min-width: 12rem;
+    max-width: 16rem;
+    width: 100%;
+  }
+}

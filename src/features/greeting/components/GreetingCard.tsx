@@ -10,11 +10,7 @@ export function GreetingCard() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1>{greeting}</h1>
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="הכנס את שמך"
-        />
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="הכנס את שמך" />
         <Button onClick={() => setName('')}>איפוס</Button>
       </div>
     </div>

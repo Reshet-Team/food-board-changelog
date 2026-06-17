@@ -1,0 +1,52 @@
+@layer components {
+  .tableRow {
+    &[data-virtualized='true'] {
+      display: flex;
+      position: absolute;
+      width: 100%;
+      will-change: transform;
+    }
+
+    .tableCell {
+      &[data-virtualized='true'] {
+        display: flex;
+        align-items: center;
+      }
+    }
+
+    .detailPanelCell {
+      width: 100%;
+
+      &[data-virtualized='true'] {
+        display: flex;
+        width: 100%;
+      }
+    }
+  }
+
+  .collapsiblePanel {
+    display: flex;
+    height: var(--collapsible-panel-height);
+    flex-direction: column;
+    justify-content: end;
+    width: 100%;
+    overflow: hidden;
+    transition:
+      height 150ms var(--ease-out-quart),
+      padding-top 150ms var(--ease-out-quart);
+    padding-top: calc(var(--row-gap) / 2);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      height: 0;
+      padding-top: 0;
+    }
+  }
+
+  .virtualDetailPanel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: calc(var(--row-gap) / 2);
+  }
+}

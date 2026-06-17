@@ -11,13 +11,13 @@
 }
 
 @mixin light {
-  [data-theme='light'] & {
+  :root[data-theme='light'] & {
     @content;
   }
 }
 
 @mixin dark {
-  [data-theme='dark'] & {
+  :root[data-theme='dark'] & {
     @content;
   }
 }

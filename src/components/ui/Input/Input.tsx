@@ -10,13 +10,7 @@ export interface InputProps extends Omit<BaseInput.Props, 'size'> {
   endSlot?: React.ReactNode
 }
 
-export function Input({
-  size = 'md',
-  startSlot,
-  endSlot,
-  className,
-  ...props
-}: InputProps) {
+export function Input({ size = 'md', startSlot, endSlot, className, ...props }: InputProps) {
   return (
     <div className={clsx(styles.wrapper, className)} data-size={size}>
       {startSlot && <div className={styles.startSlot}>{startSlot}</div>}

@@ -1,0 +1,115 @@
+@layer primitives {
+  .tableContainer {
+    --row-height: 4rem;
+    --row-gap: 10px;
+    --row-border-radius: 10px;
+    --row-inline-padding: var(--space-4);
+
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .table {
+    width: 100%;
+    caption-side: bottom;
+    font-size: var(--text-sm);
+    border-collapse: separate;
+    border-spacing: 0 var(--row-gap);
+  }
+
+  .tableHeader {
+    & tr {
+      background-color: transparent;
+      height: fit-content;
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+
+  .tableBody {
+    & tr:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .tableFooter {
+    background-color: rgb(var(--muted-rgb), 0.5);
+    font-weight: var(--font-weight-medium);
+
+    & > tr:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .tableRow {
+    background-color: var(--color-content);
+    border-radius: var(--row-border-radius);
+
+    &:hover,
+    &[data-state='selected'] {
+      background-color: var(--color-hover);
+    }
+  }
+
+  .tableHead {
+    color: var(--color-gray-500);
+    height: 2.5rem;
+    padding-block: 0;
+    padding: 0.5rem;
+    text-align: start;
+    vertical-align: middle;
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+
+    &:first-child {
+      padding-inline-start: var(--row-inline-padding);
+    }
+
+    &:last-child {
+      padding-inline-end: var(--row-inline-padding);
+    }
+
+    &:has([role='checkbox']) {
+      padding-inline-end: 0;
+    }
+
+    & > [role='checkbox'] {
+      transform: translateY(2px);
+    }
+  }
+
+  .tableCell {
+    padding: 0.5rem;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-block: 1px solid var(--color-border);
+    height: var(--row-height);
+
+    &:first-child {
+      padding-inline-start: var(--row-inline-padding);
+      border-inline-start: 1px solid var(--color-border);
+      border-start-start-radius: var(--row-border-radius);
+      border-end-start-radius: var(--row-border-radius);
+    }
+
+    &:last-child {
+      padding-inline-end: var(--row-inline-padding);
+      border-inline-end: 1px solid var(--color-border);
+      border-start-end-radius: var(--row-border-radius);
+      border-end-end-radius: var(--row-border-radius);
+    }
+
+    &:has([role='checkbox']) {
+      padding-inline-end: 0;
+    }
+  }
+
+  .tableCaption {
+    margin-top: 1rem;
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+  }
+}

@@ -16,12 +16,10 @@
       height: var(--control-height-sm);
       font-size: var(--font-size-sm);
     }
-
     &[data-size='md'] {
       height: var(--control-height-md);
       font-size: var(--font-size-base);
     }
-
     &[data-size='lg'] {
       height: var(--control-height-lg);
       font-size: var(--font-size-lg);

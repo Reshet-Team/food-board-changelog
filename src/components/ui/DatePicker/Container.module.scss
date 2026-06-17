@@ -1,0 +1,7 @@
+@layer components {
+  .animatedWrapper {
+    position: relative;
+    overflow: hidden;
+    transition: height var(--duration-slow) var(--ease-in-out-quart);
+  }
+}

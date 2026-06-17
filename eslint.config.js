@@ -26,10 +26,7 @@ export default defineConfig([
       'react-refresh': reactRefresh,
     },
     rules: {
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'import/no-cycle': 'off',
       'import/order': 'off',
       'import/consistent-type-specifier-style': 'off',

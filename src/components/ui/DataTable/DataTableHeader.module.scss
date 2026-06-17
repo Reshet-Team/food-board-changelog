@@ -1,0 +1,24 @@
+@layer components {
+  .tableHeader {
+    &[data-virtualized='true'] {
+      display: grid;
+      position: sticky;
+      top: 0;
+      padding-bottom: var(--row-gap);
+    }
+
+    .tableRow {
+      &[data-virtualized='true'] {
+        display: flex;
+        width: 100%;
+      }
+
+      .tableHead {
+        &[data-virtualized='true'] {
+          align-items: center;
+          display: flex;
+        }
+      }
+    }
+  }
+}

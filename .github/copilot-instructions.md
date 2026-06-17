@@ -62,3 +62,5 @@ src/
 ## TypeScript
 
 The project uses strict TypeScript. Avoid `any`. Prefer `interface` for object shapes and `type` for unions/aliases. `noUncheckedIndexedAccess` is enabled — handle potential `undefined` on array/object index access.
+
+

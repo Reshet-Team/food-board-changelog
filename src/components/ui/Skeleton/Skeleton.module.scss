@@ -1,0 +1,32 @@
+@layer components {
+  .root {
+    display: block;
+    width: 100%;
+    background: var(--color-bg-elevated);
+    animation: skeleton-pulse 2s ease-in-out infinite;
+
+    &[data-shape='rectangle'] {
+      border-radius: var(--radius-md);
+    }
+
+    &[data-shape='circle'] {
+      border-radius: var(--radius-full);
+      aspect-ratio: 1;
+    }
+
+    &[data-shape='text'] {
+      border-radius: var(--radius-sm);
+      block-size: 1em;
+    }
+
+    @keyframes skeleton-pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.4;
+      }
+    }
+  }
+}

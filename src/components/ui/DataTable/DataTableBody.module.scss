@@ -1,0 +1,8 @@
+@layer components {
+  .tableBody {
+    &[data-virtualized='true'] {
+      display: grid;
+      position: relative;
+    }
+  }
+}

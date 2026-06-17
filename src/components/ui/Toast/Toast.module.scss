@@ -1,0 +1,292 @@
+@use '@/theme/mixins' as *;
+
+@layer components {
+  .viewport {
+    position: fixed;
+    inset-block-end: var(--space-4);
+    inset-inline-end: var(--space-4);
+    z-index: 200;
+    width: 22rem;
+    max-width: calc(100vw - var(--space-8));
+    /*
+     * Height covers the frontmost toast plus a small buffer for the
+     * peeking toasts stacked behind it, so the entire visible stack
+     * is hoverable and triggers the expand interaction.
+     */
+    height: calc(var(--toast-frontmost-height, 0px) + 20px);
+    overflow: visible;
+    outline: none;
+    pointer-events: none;
+    interpolate-size: allow-keywords;
+    transition: height 400ms var(--ease-out-quart);
+
+    &[data-expanded] {
+      height: auto;
+    }
+  }
+
+  .root {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    pointer-events: auto;
+    z-index: calc(200 - var(--toast-index, 0) * 10);
+
+    /* Stacked / collapsed state */
+    scale: calc(1 - var(--toast-index, 0) * 0.04);
+    translate: 0 calc(var(--toast-index, 0) * -8px);
+
+    transition:
+      scale 400ms var(--ease-out-quart),
+      translate 400ms var(--ease-out-quart),
+      opacity 250ms var(--ease-out-quart);
+
+    /* Type accent colour — inherited by children via CSS cascade */
+    &[data-type='success'] {
+      --accent: var(--color-success);
+    }
+
+    &[data-type='error'] {
+      --accent: var(--color-danger);
+    }
+
+    &[data-type='warning'] {
+      --accent: var(--color-warning);
+    }
+
+    &[data-type='info'] {
+      --accent: var(--color-primary);
+    }
+
+    /* Expanded state — each toast moves to its vertical offset */
+    &[data-expanded] {
+      scale: 1;
+      /* Extra index * gap pushes each toast further up, creating visual gaps */
+      translate: 0 calc(-1 * var(--toast-offset-y, 0px) - var(--toast-index, 0) * var(--space-2));
+    }
+
+    /* Entry animation */
+    &[data-starting-style] {
+      opacity: 0;
+      scale: 0.97;
+      translate: 0 var(--space-2);
+    }
+
+    /* Exit animation */
+    &[data-ending-style] {
+      opacity: 0;
+      translate: calc(100% + var(--space-4)) calc(var(--toast-index, 0) * -8px);
+    }
+
+    /* While being swiped, disable transition so it tracks the gesture */
+    &[data-swiping] {
+      transition: none;
+    }
+  }
+
+  .content {
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3);
+    padding-inline-end: var(--space-8);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-1);
+    min-inline-size: 0;
+  }
+
+  .icon {
+    flex-shrink: 0;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+    color: var(--color-fg);
+  }
+
+  .description {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    color: var(--color-fg-muted);
+  }
+
+  .action {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--duration-fast) var(--ease-out-quart);
+
+    &:hover {
+      background-color: var(--color-hover);
+    }
+
+    &:focus-visible {
+      @include focus-ring();
+    }
+  }
+
+  .close {
+    position: absolute;
+    inset-block-start: var(--space-2);
+    inset-inline-end: var(--space-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-5);
+    height: var(--space-5);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-out-quart),
+      color var(--duration-fast) var(--ease-out-quart);
+
+    &:hover {
+      background-color: var(--color-hover);
+      color: var(--color-fg);
+    }
+
+    &:focus-visible {
+      @include focus-ring();
+    }
+  }
+
+  // ── Anchored toast (tooltip-style) ────────────────────────────────────────
+
+  /* Overrides .root's absolute positioning for use inside a Positioner */
+  .anchoredRoot {
+    position: static;
+    inset-block-end: unset;
+    inset-inline: unset;
+    z-index: unset;
+    translate: none;
+    scale: 1;
+
+    &[data-starting-style] {
+      opacity: 0;
+      scale: 0.96;
+      translate: none;
+    }
+
+    &[data-ending-style] {
+      opacity: 0;
+      scale: 0.96;
+      translate: none;
+    }
+  }
+
+  .positioner {
+    z-index: 200;
+  }
+
+  .anchoredContent {
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    font-size: var(--font-size-xs);
+    max-inline-size: 240px;
+    overflow-wrap: anywhere;
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 150ms var(--ease-out-quart),
+      scale 150ms var(--ease-out-quart);
+
+    /* Title inside anchored content is smaller */
+    .title {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    /* Description inside anchored content matches popup size */
+    .description {
+      font-size: var(--font-size-xs);
+    }
+  }
+
+  .arrow {
+    display: block;
+    position: relative;
+    width: 10px;
+    height: 5px;
+    overflow: clip;
+
+    &[data-side='top'] {
+      inset-block-end: -5px;
+      rotate: 180deg;
+    }
+
+    &[data-side='bottom'] {
+      inset-block-start: -5px;
+      rotate: 0deg;
+    }
+
+    &[data-side='left'] {
+      inset-inline-end: -7px;
+      rotate: 90deg;
+    }
+
+    &[data-side='right'] {
+      inset-inline-start: -7px;
+      rotate: -90deg;
+    }
+
+    &::before {
+      content: '';
+      display: block;
+      position: absolute;
+      inset-block-end: 0;
+      left: 50%;
+      box-sizing: border-box;
+      width: calc(5px * sqrt(2));
+      height: calc(5px * sqrt(2));
+      background-color: var(--color-bg);
+      border: 1px solid var(--color-border);
+      transform: translate(-50%, 50%) rotate(45deg);
+    }
+  }
+}

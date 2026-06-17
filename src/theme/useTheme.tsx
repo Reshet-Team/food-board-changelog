@@ -15,9 +15,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function getSystemTheme(): 'light' | 'dark' {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -25,16 +23,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('sp-theme')
     return isTheme(saved) ? saved : 'system'
   })
-  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(
-    getSystemTheme,
-  )
+  const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(getSystemTheme)
 
   const resolved = theme === 'system' ? systemTheme : theme
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) =>
-      setSystemTheme(e.matches ? 'dark' : 'light')
+    const handler = (e: MediaQueryListEvent) => setSystemTheme(e.matches ? 'dark' : 'light')
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
@@ -45,9 +40,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme, resolved])
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolved }}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, setTheme, resolved }}>{children}</ThemeContext.Provider>
   )
 }
 

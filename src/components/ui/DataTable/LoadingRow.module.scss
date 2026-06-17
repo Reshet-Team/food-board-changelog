@@ -1,0 +1,23 @@
+@layer components {
+  .tableRow {
+    &[data-virtualized='true'] {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: var(--row-height);
+    }
+
+    .tableCell {
+      &[data-virtualized='true'] {
+        display: flex;
+        align-items: center;
+        height: var(--row-height);
+      }
+
+      .skeleton {
+        height: 1rem;
+        width: 100%;
+      }
+    }
+  }
+}

@@ -19,16 +19,24 @@
   "dependencies": {
     "@base-ui/react": "^1.5.0",
     "@fontsource-variable/heebo": "^5.2.8",
+    "@internationalized/date": "^3.12.2",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "latest",
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.14.2",
     "@tanstack/router-plugin": "^1.168.18",
+    "@uniform-ts/core": "^0.1.2",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-aria": "^3.49.0",
+    "react-day-picker": "^10.0.1",
+    "react-dom": "^19.2.7",
+    "react-stately": "^3.47.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

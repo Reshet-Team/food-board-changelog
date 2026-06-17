@@ -6,7 +6,7 @@
 @use 'shadows';
 @use 'transitions';
 
-@layer reset, theme, primitives, components, a11y;
+@layer theme, reset, primitives, components, a11y;
 
 :root {
   color-scheme: light dark;

@@ -1,0 +1,51 @@
+@layer components {
+  .spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--spinner-color);
+    flex-shrink: 0;
+
+    --spinner-color: var(--color-primary);
+
+    &[data-size='sm'] {
+      --spinner-size: 14px;
+    }
+
+    &[data-size='md'] {
+      --spinner-size: 20px;
+    }
+
+    &[data-size='lg'] {
+      --spinner-size: 28px;
+    }
+
+    &[data-color='primary'] {
+      --spinner-color: var(--color-primary);
+    }
+
+    &[data-color='neutral'] {
+      --spinner-color: var(--color-fg-muted);
+    }
+
+    &[data-color='danger'] {
+      --spinner-color: var(--color-danger);
+    }
+
+    &[data-color='inline'] {
+      --spinner-color: currentcolor;
+    }
+  }
+
+  .icon {
+    width: var(--spinner-size, 20px);
+    height: var(--spinner-size, 20px);
+    animation: spinner-spin 0.75s linear infinite;
+  }
+
+  @keyframes spinner-spin {
+    to {
+      rotate: 360deg;
+    }
+  }
+}
