@@ -4,7 +4,8 @@
     flex-direction: column;
     gap: var(--space-6);
     padding: var(--space-6);
-    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
     background-color: var(--color-bg-subtle);
   }
 

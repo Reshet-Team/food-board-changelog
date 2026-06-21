@@ -266,6 +266,9 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
       changedBy: '',
     })
     setIsMandatoryFilled(false)
+    // Clear the URL search params too. The table is driven by the URL, so this
+    // empties the results, and a later refresh won't repopulate stale fields.
+    void navigate({ to: '/food-logs', search: foodLogsSearchSchema.parse({}) })
   }
 
   const contextValue: FormActionsContextValue = {

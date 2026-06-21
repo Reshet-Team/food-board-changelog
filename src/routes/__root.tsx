@@ -1,3 +1,4 @@
+import { ToastProvider } from '@/components/ui/Toast/Toast'
 import { ThemeProvider } from '@/theme/useTheme'
 import { DirectionProvider } from '@base-ui/react/direction-provider'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -18,20 +19,22 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <DirectionProvider direction="rtl">
-        <Outlet />
-        <TanStackDevtools
-          config={{ position: 'bottom-left' }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            {
-              name: 'Tanstack Query',
-              render: <ReactQueryDevtoolsPanel />,
-            },
-          ]}
-        />
+        <ToastProvider>
+          <Outlet />
+          <TanStackDevtools
+            config={{ position: 'bottom-left' }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              {
+                name: 'Tanstack Query',
+                render: <ReactQueryDevtoolsPanel />,
+              },
+            ]}
+          />
+        </ToastProvider>
       </DirectionProvider>
     </ThemeProvider>
   )

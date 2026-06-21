@@ -1,7 +1,16 @@
 import type { FoodLog, FoodLogsFilter } from '@/features/foodLogs/types/foodLog'
 import { toSapDate } from '@/utils/date'
+import { MOCK_FOOD_LOGS } from './mockFoodLogs'
 
 export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]> {
+  // Mock mode (VITE_USE_MOCK_DATA=true) or no SAP backend configured → serve
+  // mock data so the screen can be tested without a live SAP server.
+  if (import.meta.env.VITE_USE_MOCK_DATA === 'true' || !import.meta.env.VITE_SAP_API_BASE_URL) {
+    await new Promise((resolve) => setTimeout(resolve, 600)) // simulate latency
+    // Empty-state demo: searching food board "0" returns no rows.
+    return filter.foodBoard === '0' ? [] : MOCK_FOOD_LOGS
+  }
+
   const url = new URL('/api/food-logs', import.meta.env.VITE_SAP_API_BASE_URL)
 
   // String fields appended as-is; Date fields converted to SAP YYYYMMDD format here.
