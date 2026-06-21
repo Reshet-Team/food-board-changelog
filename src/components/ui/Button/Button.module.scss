@@ -13,6 +13,7 @@
     white-space: nowrap;
     cursor: pointer;
     border: 1px solid transparent;
+    touch-action: manipulation;
     transition:
       background-color var(--duration-fast) var(--ease-out-quart),
       color var(--duration-fast) var(--ease-out-quart),

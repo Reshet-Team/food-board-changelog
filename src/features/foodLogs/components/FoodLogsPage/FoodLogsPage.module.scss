@@ -1,3 +1,46 @@
-.foodLogsPage {
-  display: contents;
+@layer components {
+  .page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    min-height: 100dvh;
+    background-color: var(--color-bg-subtle);
+  }
+
+  .pageTitle {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-fg);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+    text-wrap: balance;
+  }
+
+  .formCard {
+    width: 100%;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-6);
+
+    // Entrance: card fades in and slides up 6px on first render.
+    // @starting-style sets the from-state before the first paint.
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 200ms var(--ease-out-quart),
+      transform 200ms var(--ease-out-quart);
+
+    @starting-style {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
 }

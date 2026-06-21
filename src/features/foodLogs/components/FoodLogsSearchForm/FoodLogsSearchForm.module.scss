@@ -1,3 +1,57 @@
-.foodLogsSearchForm {
-  display: contents;
+@layer components {
+  .form {
+    display: grid;
+
+    // Responsive: as many equal tracks as fit. The row stays on one line on
+    // wide/full screens and wraps to more rows as the screen narrows. auto-fit
+    // collapses leftover tracks so the fields always fill the card width and
+    // never overflow it.
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  // The date range holds two dates + an icon, so it needs ~2 tracks of width.
+  .dateRangeField {
+    grid-column: span 2;
+  }
+
+  // Very narrow screens (small phones) may only fit a single track — let the
+  // range take the full row instead of spilling out of the card.
+  @media (width <= 420px) {
+    .dateRangeField {
+      grid-column: 1 / -1;
+    }
+  }
+
+  // Forces the single DatePicker to fill its grid cell.
+  // .dateFieldWrapper > div  = DatePicker's inputWrapper (inline-flex row)
+  // > div:first-child        = DateInput's .field — needs flex: 1 to fill the row
+  .dateFieldWrapper > div {
+    width: 100%;
+  }
+
+  .dateFieldWrapper > div > div:first-child {
+    flex: 1;
+  }
+
+  .fieldError {
+    font-size: var(--font-size-sm);
+    color: var(--color-danger);
+    line-height: var(--line-height-normal);
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: var(--space-3);
+    align-items: center;
+    padding-block-start: var(--space-2);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .spinner {
+    margin-inline-end: var(--space-1);
+  }
 }

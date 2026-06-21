@@ -41,11 +41,14 @@ export interface FoodLog {
 // render the search form.
 
 export const foodLogsSearchSchema = z.object({
-  foodBoard: z.string().default(''),
-  alternative: z.string().default(''),
+  foodBoard: z.string().regex(/^\d*$/, 'מספרים בלבד').default(''),
+  alternative: z
+    .string()
+    .regex(/^\d{0,2}$/, 'מספרים בלבד, עד 2 ספרות')
+    .default(''),
   dateFrom: z.coerce.date().default(() => new Date(Date.now() - 864e5)),
   dateTo: z.coerce.date().default(() => new Date()),
-  material: z.string().optional(),
+  material: z.string().regex(/^\d*$/, 'מספרים בלבד').optional(),
   consumptionDate: z.coerce.date().optional(),
   changeTime: z.string().optional(),
   changedBy: z.string().optional(),
