@@ -14,7 +14,7 @@ import type {
   SubmitButtonProps,
 } from '@uniform-ts/core'
 import { AutoForm, createForm } from '@uniform-ts/core'
-import { Filter } from 'lucide-react'
+import { Filter, X } from 'lucide-react'
 import { createContext, useContext, useRef, useState } from 'react'
 import styles from './FoodLogsSearchForm.module.scss'
 
@@ -39,17 +39,24 @@ const FormActionsContext = createContext<FormActionsContextValue>({
   onReset: () => {},
 })
 
-// ─── Context for passing the range picker value into the dateFrom field ───────
+// ─── Context for passing the range picker values into the date fields ─────────
+// Carries both the change-date range (dateFrom/dateTo) and the optional
+// consumption-date range, since both are rendered by custom field components
+// defined outside the parent and need access to the shared range state.
 interface DateRangeContextValue {
   rangePickerValue: DateRangeValue | null
   onRangeChange: (value: DateRangeValue | null) => void
   rangeError: string | null
+  consumptionRange: DateRangeValue | null
+  onConsumptionRangeChange: (value: DateRangeValue | null) => void
 }
 
 const DateRangeContext = createContext<DateRangeContextValue>({
   rangePickerValue: null,
   onRangeChange: () => {},
   rangeError: null,
+  consumptionRange: null,
+  onConsumptionRangeChange: () => {},
 })
 
 // ─── Submit button — full-width "apply filters" action at the panel's foot ─────
@@ -160,14 +167,17 @@ function DateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
 }
 
 // Single date picker — used for consumptionDate
-function DateFieldPicker({ value, onChange, onBlur }: FieldProps) {
+function ConsumptionDateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
+  const { consumptionRange, onConsumptionRangeChange } = useContext(DateRangeContext)
+
   return (
     <div className={styles.dateFieldWrapper}>
       <DatePicker
-        mode="single"
-        value={(value as Date | null | undefined) ?? null}
-        onChange={(v: Date | null) => {
-          onChange(v)
+        mode="range"
+        value={consumptionRange}
+        onChange={(range) => {
+          onConsumptionRangeChange(range)
+          onChange(range?.start ?? undefined)
           onBlur()
         }}
       />
@@ -175,27 +185,107 @@ function DateFieldPicker({ value, onChange, onBlur }: FieldProps) {
   )
 }
 
-// Time input: the form stores HHMMSS ("143000"), but <input type="time"> uses HH:MM.
-// We convert on every read and write.
-function TimeInput({ value, onChange, onBlur, ref }: FieldProps) {
-  const strValue = (value as string | undefined) ?? ''
-  const displayValue = strValue ? `${strValue.slice(0, 2)}:${strValue.slice(2, 4)}` : ''
+// Chips input — collects multiple values. Type a value and press Enter (or
+// comma) to add it as a removable chip. Backspace on an empty input removes the
+// last chip. `digitsOnly` restricts entry to digits (used for material numbers).
+function ChipsInput({
+  value,
+  onChange,
+  onBlur,
+  inputRef,
+  digitsOnly,
+}: {
+  value: string[] | undefined
+  onChange: (next: string[]) => void
+  onBlur: () => void
+  inputRef?: React.Ref<HTMLInputElement>
+  digitsOnly: boolean
+}) {
+  const [draft, setDraft] = useState('')
+  const chips = value ?? []
+
+  function addChip() {
+    const trimmed = draft.trim()
+    if (!trimmed || chips.includes(trimmed)) {
+      setDraft('')
+      return
+    }
+    onChange([...chips, trimmed])
+    setDraft('')
+  }
+
+  function removeChip(index: number) {
+    onChange(chips.filter((_, i) => i !== index))
+  }
 
   return (
-    <Input
-      ref={ref as React.Ref<HTMLInputElement>}
-      type="time"
-      value={displayValue}
+    <div className={styles.chipsField}>
+      {chips.length > 0 && (
+        <ul className={styles.chipList}>
+          {chips.map((chip, index) => (
+            <li key={chip} className={styles.chip}>
+              <span>{chip}</span>
+              <button
+                type="button"
+                className={styles.chipRemove}
+                aria-label={`הסר ${chip}`}
+                onClick={() => removeChip(index)}
+              >
+                <X size="0.75rem" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Input
+        ref={inputRef}
+        autoComplete="off"
+        inputMode={digitsOnly ? 'numeric' : undefined}
+        placeholder="הקלידו וה-Enter להוספה"
+        value={draft}
+        onChange={(e) => {
+          const next = digitsOnly ? e.target.value.replace(/\D/g, '') : e.target.value
+          setDraft(next)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            addChip()
+          } else if (e.key === 'Backspace' && !draft && chips.length > 0) {
+            removeChip(chips.length - 1)
+          }
+        }}
+        onBlur={() => {
+          addChip()
+          onBlur()
+        }}
+      />
+    </div>
+  )
+}
+
+// Material chips — restricted to digit-only values.
+function MaterialChipsInput({ value, onChange, onBlur, ref }: FieldProps<string[]>) {
+  return (
+    <ChipsInput
+      value={value}
+      onChange={onChange}
       onBlur={onBlur}
-      onChange={(e) => {
-        const hhmm = e.target.value // "HH:MM" or ""
-        if (!hhmm) {
-          onChange('')
-          return
-        }
-        // "14:30" → "14:30:00" → strip colons → "143000"
-        onChange((hhmm + ':00').replace(/:/g, ''))
-      }}
+      inputRef={ref as React.Ref<HTMLInputElement>}
+      digitsOnly
+    />
+  )
+}
+
+// Changed-by chips — free-text usernames.
+function ChangedByChipsInput({ value, onChange, onBlur, ref }: FieldProps<string[]>) {
+  return (
+    <ChipsInput
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      inputRef={ref as React.Ref<HTMLInputElement>}
+      digitsOnly={false}
     />
   )
 }
@@ -220,6 +310,13 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
 
   const [rangeError, setRangeError] = useState<string | null>(null)
 
+  // Optional consumption-date range. null means "no consumption-date filter".
+  const [consumptionRange, setConsumptionRange] = useState<DateRangeValue | null>(() =>
+    defaultValues.consumptionDateFrom && defaultValues.consumptionDateTo
+      ? { start: defaultValues.consumptionDateFrom, end: defaultValues.consumptionDateTo }
+      : null,
+  )
+
   function validateRange(range: DateRangeValue | null): string | null {
     if (!range) return null
     const maxDate = new Date(range.start)
@@ -242,7 +339,16 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     const dateTo = rangePickerValue?.end ?? data.dateTo
 
     if (rangeError) return
-    void navigate({ to: '/food-logs', search: { ...data, dateFrom, dateTo } })
+    void navigate({
+      to: '/food-logs',
+      search: {
+        ...data,
+        dateFrom,
+        dateTo,
+        consumptionDateFrom: consumptionRange?.start,
+        consumptionDateTo: consumptionRange?.end,
+      },
+    })
   }
 
   function handleReset() {
@@ -250,15 +356,16 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     const today = new Date()
     setRangePickerValue({ start: yesterday, end: today })
     setRangeError(null)
+    setConsumptionRange(null)
     formRef.current?.reset({
       foodBoard: '',
       alternative: '',
       dateFrom: yesterday,
       dateTo: today,
-      material: '',
-      consumptionDate: undefined,
-      changeTime: '',
-      changedBy: '',
+      material: undefined,
+      consumptionDateFrom: undefined,
+      consumptionDateTo: undefined,
+      changedBy: undefined,
     })
     setIsMandatoryFilled(false)
     // Clear the URL search params too. The table is driven by the URL, so this
@@ -276,6 +383,8 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     rangePickerValue,
     onRangeChange: handleRangeChange,
     rangeError,
+    consumptionRange,
+    onConsumptionRangeChange: setConsumptionRange,
   }
 
   return (
@@ -297,16 +406,19 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
             defaultValues={defaultValues}
             onSubmit={handleSubmit}
             fieldWrapper={FormFieldWrapper}
-            components={{ string: StringInput, date: DateFieldPicker }}
+            components={{ string: StringInput }}
             fields={{
               foodBoard: { label: 'לוח מזון', component: NumericInput },
               alternative: { label: 'חלופה', component: TwoDigitNumericInput },
               dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
               dateTo: { hidden: true },
-              material: { label: 'חומר', component: NumericInput },
-              consumptionDate: { label: 'תאריך צריכה' },
-              changeTime: { label: 'שעת שינוי', component: TimeInput },
-              changedBy: { label: 'שונה ע"י' },
+              material: { label: 'חומר', component: MaterialChipsInput },
+              consumptionDateFrom: {
+                label: 'טווח תאריכי צריכה',
+                component: ConsumptionDateRangeFieldPicker,
+              },
+              consumptionDateTo: { hidden: true },
+              changedBy: { label: 'שונה ע"י', component: ChangedByChipsInput },
             }}
             layout={{
               submitButton: FormActionsButtons,

@@ -12,10 +12,10 @@ export interface FoodLogsFilter {
   // Optional
   dateTo?: Date // DATUM  — To Change Date. Default: today.
   //          Range cannot exceed 6 months from dateFrom.
-  material?: string // MATNR  — Material number (zero-padded CHAR18)
-  consumptionDate?: Date // DATUM  — Specific consumption date
-  changeTime?: string // UZEIT  — Specific change time (HHMMSS)
-  changedBy?: string // USNAM  — Username who made the change
+  material?: string[] // MATNR  — One or more material numbers (zero-padded CHAR18)
+  consumptionDateFrom?: Date // DATUM  — From consumption date
+  consumptionDateTo?: Date // DATUM  — To consumption date
+  changedBy?: string[] // USNAM  — One or more usernames who made the change
 }
 
 // ─── Food Log Record (one table row) ────────────────────────────────────────
@@ -48,10 +48,10 @@ export const foodLogsSearchSchema = z.object({
     .default(''),
   dateFrom: z.coerce.date().default(() => new Date(Date.now() - 864e5)),
   dateTo: z.coerce.date().default(() => new Date()),
-  material: z.string().regex(/^\d*$/, 'מספרים בלבד').optional(),
-  consumptionDate: z.coerce.date().optional(),
-  changeTime: z.string().optional(),
-  changedBy: z.string().optional(),
+  material: z.array(z.string().regex(/^\d+$/, 'מספרים בלבד')).optional(),
+  consumptionDateFrom: z.coerce.date().optional(),
+  consumptionDateTo: z.coerce.date().optional(),
+  changedBy: z.array(z.string()).optional(),
 })
 
 export type FoodLogsSearchParams = z.infer<typeof foodLogsSearchSchema>

@@ -25,12 +25,14 @@ export function FoodLogsPage() {
           alternative: search.alternative,
           dateFrom: search.dateFrom,
           dateTo: search.dateTo,
-          ...(search.material !== undefined && { material: search.material }),
-          ...(search.consumptionDate !== undefined && {
-            consumptionDate: search.consumptionDate,
+          ...(search.material?.length ? { material: search.material } : {}),
+          ...(search.consumptionDateFrom !== undefined && {
+            consumptionDateFrom: search.consumptionDateFrom,
           }),
-          ...(search.changeTime !== undefined && { changeTime: search.changeTime }),
-          ...(search.changedBy !== undefined && { changedBy: search.changedBy }),
+          ...(search.consumptionDateTo !== undefined && {
+            consumptionDateTo: search.consumptionDateTo,
+          }),
+          ...(search.changedBy?.length ? { changedBy: search.changedBy } : {}),
         }
       : null
 

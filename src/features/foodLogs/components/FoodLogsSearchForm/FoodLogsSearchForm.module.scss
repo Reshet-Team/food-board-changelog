@@ -57,6 +57,51 @@
     line-height: var(--line-height-normal);
   }
 
+  // Multi-value chips input: a wrapped list of removable tokens above the entry
+  // field.
+  .chipsField {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .chipList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-fg);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+  }
+
+  .chipRemove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--color-icon);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-fg);
+    }
+  }
+
   // Pinned to the foot of the panel so the apply action stays reachable even
   // when the fields above overflow and scroll. The negative insets let the bar
   // span the panel's full width and sit flush with its bottom edge.
