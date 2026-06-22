@@ -19,7 +19,7 @@ import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { formatSapDate, formatSapTime } from '@/utils/date'
 import type { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { FileSearch, FileSpreadsheet, RotateCw, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, FileSearch, FileSpreadsheet, RotateCw, TriangleAlert } from 'lucide-react'
 import { useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import styles from './FoodLogsTable.module.scss'
@@ -77,6 +77,20 @@ function ChangeTypeBadge({ value }: { value: string }) {
   return <span className={clsx(styles.badge, tone)}>{value}</span>
 }
 
+// ─── Value change ────────────────────────────────────────────────────────────
+// Shows the change inline: the old value (red) with an arrow pointing to the
+// new value (green). In RTL the arrow points to the inline-end (left), so the
+// flow reads old → new.
+function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: string }) {
+  return (
+    <span className={styles.valueChange}>
+      <span className={styles.oldValue}>{oldValue}</span>
+      <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
+      <span className={styles.newValue}>{newValue}</span>
+    </span>
+  )
+}
+
 // ─── Column definitions ──────────────────────────────────────────────────────
 // All data columns are sortable (TanStack Table's default). Date/time columns
 // store the raw SAP wire value (so sorting stays correct) and format on display.
@@ -118,8 +132,14 @@ const columns: ColumnDef<FoodLog>[] = [
   },
   { accessorKey: 'changedBy', header: 'שונה ע"י' },
   { accessorKey: 'field', header: 'שדה' },
-  { accessorKey: 'oldValue', header: 'ערך ישן' },
-  { accessorKey: 'newValue', header: 'ערך חדש' },
+  {
+    id: 'valueChange',
+    header: 'שינוי ערך',
+    enableSorting: false,
+    cell: ({ row }) => (
+      <ValueChange oldValue={row.original.oldValue} newValue={row.original.newValue} />
+    ),
+  },
 ]
 
 export interface FoodLogsTableProps {

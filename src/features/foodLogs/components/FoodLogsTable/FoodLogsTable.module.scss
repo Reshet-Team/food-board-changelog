@@ -78,6 +78,60 @@
       z-index: 1;
       background: var(--color-bg);
     }
+
+    // ─── Responsive columns ───────────────────────────────────────────────────
+    // The shared DataTable gives every column a fixed pixel width, so the table
+    // grows wider than its container once the filter panel opens or the viewport
+    // narrows — forcing a horizontal scroll. A fixed layout with proportional
+    // widths instead lets each column scale with the available space, so the
+    // table always fits, and overlong values truncate with an ellipsis rather
+    // than pushing the layout wider.
+    table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    th,
+    td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    // Centre each header label over the middle of its column. `th > div` is the
+    // ColumnHeader wrapper, so centring it centres the sort button.
+    th > div {
+      justify-content: center;
+    }
+
+    // Proportional column widths (sum = 100%). `!important` is required to beat
+    // the inline pixel width the DataTable sets on each cell. If a column is
+    // added or removed, rebalance these so they still total 100%.
+    [data-column-id='material'] {
+      width: 14% !important;
+    }
+
+    [data-column-id='field'],
+    [data-column-id='valueChange'],
+    [data-column-id='consumptionDate'],
+    [data-column-id='changeDate'],
+    [data-column-id='typeOfChange'] {
+      width: 10% !important;
+    }
+
+    [data-column-id='changeTime'],
+    [data-column-id='dayInPeriod'] {
+      width: 9% !important;
+    }
+
+    [data-column-id='changedBy'] {
+      width: 8% !important;
+    }
+
+    [data-column-id='quantity'],
+    [data-column-id='rowNumber'] {
+      width: 5% !important;
+    }
   }
 
   // ─── Change-type badge ──────────────────────────────────────────────────────
@@ -111,6 +165,37 @@
   .rowNumber {
     font-variant-numeric: tabular-nums;
     font-size: var(--font-size-sm);
+    color: var(--color-fg-subtle);
+  }
+
+  // ─── Value change (old → new) ───────────────────────────────────────────────
+  .valueChange {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .oldValue,
+  .newValue {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .oldValue {
+    color: var(--color-danger);
+    text-decoration: line-through;
+  }
+
+  .newValue {
+    color: var(--color-success);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .valueArrow {
+    flex-shrink: 0;
     color: var(--color-fg-subtle);
   }
 }
