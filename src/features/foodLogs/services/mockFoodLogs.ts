@@ -4,7 +4,7 @@ import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 // Used automatically when VITE_SAP_API_BASE_URL is not configured, so the screen
 // can be exercised end-to-end without a live SAP backend.
 
-const TYPES_OF_CHANGE = ['עדכון כמות', 'הוספת רכיב', 'מחיקת רכיב', 'שינוי תאריך']
+const TYPES_OF_CHANGE = ['הוספה', 'מחיקה', 'עדכון']
 const FIELDS = ['כמות', 'תאריך צריכה', 'יום בתקופה', 'חומר']
 const USERS = ['DCOHEN', 'MLEVI', 'YBARAK', 'RSHARON']
 
@@ -29,8 +29,36 @@ function sapTime(hours: number, minutes: number, seconds: number): string {
   return `${pad(hours)}${pad(minutes)}${pad(seconds)}`
 }
 
+/** Formats a SAP DATUM (YYYYMMDD) as a readable DD/MM/YYYY value. */
+function readableDate(dayOffset: number): string {
+  const sap = sapDate(dayOffset)
+  return `${sap.slice(6, 8)}/${sap.slice(4, 6)}/${sap.slice(0, 4)}`
+}
+
+// Produces an old/new value pair that matches the kind of field being changed,
+// so a date change shows dates, a material change shows material numbers, etc.
+// — instead of every row looking like a quantity edit.
+function valuesForField(field: string, index: number): { oldValue: string; newValue: string } {
+  switch (field) {
+    case 'תאריך צריכה':
+      return { oldValue: readableDate(-index - 1), newValue: readableDate(-index) }
+    case 'יום בתקופה':
+      return { oldValue: String((index % 30) + 1), newValue: String(((index + 3) % 30) + 1) }
+    case 'חומר':
+      return { oldValue: padMaterial(1234 + index), newValue: padMaterial(1334 + index) }
+    case 'כמות':
+    default:
+      return {
+        oldValue: ((index + 1) * 2.5).toFixed(2),
+        newValue: ((index + 1) * 2.5 + 5).toFixed(2),
+      }
+  }
+}
+
 export const MOCK_FOOD_LOGS: FoodLog[] = Array.from({ length: 24 }, (_, index) => {
   const dayOffset = -index
+  const field = FIELDS[index % FIELDS.length]!
+  const { oldValue, newValue } = valuesForField(field, index)
   return {
     typeOfChange: TYPES_OF_CHANGE[index % TYPES_OF_CHANGE.length]!,
     material: padMaterial(1234 + index),
@@ -40,8 +68,8 @@ export const MOCK_FOOD_LOGS: FoodLog[] = Array.from({ length: 24 }, (_, index) =
     changeDate: sapDate(dayOffset),
     changeTime: sapTime(index % 24, (index * 7) % 60, (index * 13) % 60),
     changedBy: USERS[index % USERS.length]!,
-    field: FIELDS[index % FIELDS.length]!,
-    oldValue: String(100 + index),
-    newValue: String(150 + index),
+    field,
+    oldValue,
+    newValue,
   }
 })

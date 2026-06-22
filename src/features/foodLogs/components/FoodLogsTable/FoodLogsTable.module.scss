@@ -100,8 +100,12 @@
 
     th,
     td {
+      // Contain each column so long values never bleed into the next one, while
+      // `overflow-wrap` lets unbroken values (18-digit materials, dates) wrap
+      // onto a new line. Rows grow in height as needed; if a value is still too
+      // long for the available room it is clipped rather than overflowing.
       overflow: hidden;
-      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
       text-align: center;
     }
 
@@ -115,11 +119,14 @@
     // the inline pixel width the DataTable sets on each cell. If a column is
     // added or removed, rebalance these so they still total 100%.
     [data-column-id='material'] {
+      width: 10% !important;
+    }
+
+    [data-column-id='valueChange'] {
       width: 14% !important;
     }
 
     [data-column-id='field'],
-    [data-column-id='valueChange'],
     [data-column-id='consumptionDate'],
     [data-column-id='changeDate'],
     [data-column-id='typeOfChange'] {
@@ -154,17 +161,17 @@
   }
 
   .badgeAdd {
-    background: color-mix(in oklch, var(--color-success) 16%, var(--color-bg));
+    background: color-mix(in srgb, var(--color-success) 18%, var(--color-bg));
     color: var(--color-success-hover);
   }
 
   .badgeUpdate {
-    background: color-mix(in oklch, var(--color-warning) 26%, var(--color-bg));
-    color: color-mix(in oklch, var(--color-warning) 70%, black);
+    background: color-mix(in srgb, var(--color-warning) 12%, var(--color-bg));
+    color: color-mix(in srgb, var(--color-warning) 75%, black);
   }
 
   .badgeDelete {
-    background: color-mix(in oklch, var(--color-danger) 14%, var(--color-bg));
+    background: color-mix(in srgb, var(--color-danger) 16%, var(--color-bg));
     color: var(--color-danger);
   }
 
@@ -177,8 +184,11 @@
 
   // ─── Value change (old → new) ───────────────────────────────────────────────
   .valueChange {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
     align-items: center;
+    justify-content: center;
     gap: var(--space-1);
     min-width: 0;
     font-size: var(--font-size-sm);
@@ -186,9 +196,8 @@
 
   .oldValue,
   .newValue {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .oldValue {
