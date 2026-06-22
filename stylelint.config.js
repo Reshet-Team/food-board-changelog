@@ -18,6 +18,7 @@ export default {
     'import-notation': null,
     'scss/at-mixin-argumentless-call-parentheses': null,
     'hue-degree-notation': null,
+    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global'] }],
     'custom-property-empty-line-before': null,
     'declaration-empty-line-before': null,
     'rule-empty-line-before': null,

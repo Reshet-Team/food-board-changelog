@@ -2,46 +2,117 @@
   .page {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-6);
     height: 100dvh;
     overflow: hidden;
     background-color: var(--color-bg-subtle);
   }
 
-  .pageTitle {
-    margin: 0;
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-fg);
-    line-height: var(--line-height-tight);
-    letter-spacing: var(--letter-spacing-tight);
-    text-wrap: balance;
+  // ─── App header (title + SAP sync status / utility actions) ─────────────────
+  .appHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-bg);
+    border-block-end: 1px solid var(--color-border);
   }
 
-  .formCard {
-    width: 100%;
+  .appHeaderStart {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .appHeaderEnd {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .appTitle {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-fg);
+  }
+
+  .syncBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    background: color-mix(in oklch, var(--color-success) 16%, var(--color-bg));
+    color: var(--color-success-hover);
+  }
+
+  .syncDot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-success);
+  }
+
+  // ─── Top toolbar ────────────────────────────────────────────────────────────
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-5);
     background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-sm);
-    padding: var(--space-6);
+    border-block-end: 1px solid var(--color-border);
+  }
 
-    // Entrance: card fades in and slides up 6px on first render.
-    // @starting-style sets the from-state before the first paint.
-    opacity: 1;
-    transform: translateY(0);
-    transition:
-      opacity 200ms var(--ease-out-quart),
-      transform 200ms var(--ease-out-quart);
+  // ─── Body: table (start/right) + filter sidebar (end/left) ──────────────────
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
 
+  .main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-5);
+    overflow: hidden;
+  }
+
+  .sidebar {
+    flex-shrink: 0;
+    width: 300px;
+    min-height: 0;
+    background: var(--color-bg);
+    border-inline-start: 1px solid var(--color-border);
+
+    // Slides in from the inline-end edge when toggled on.
     @starting-style {
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateX(8px);
     }
+
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+      opacity 160ms var(--ease-out-quart),
+      transform 160ms var(--ease-out-quart);
 
     @media (prefers-reduced-motion: reduce) {
       transition: none;
+    }
+  }
+
+  @media (width <= 768px) {
+    .sidebar {
+      width: 260px;
     }
   }
 }

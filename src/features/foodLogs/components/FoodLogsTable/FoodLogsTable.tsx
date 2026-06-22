@@ -18,15 +18,86 @@ import { useToast } from '@/components/ui/Toast/useToast'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { formatSapDate, formatSapTime } from '@/utils/date'
 import type { ColumnDef } from '@tanstack/react-table'
-import { FileSearch, RotateCw, TriangleAlert } from 'lucide-react'
+import clsx from 'clsx'
+import { FileSearch, FileSpreadsheet, RotateCw, TriangleAlert } from 'lucide-react'
 import { useEffect } from 'react'
+import * as XLSX from 'xlsx'
 import styles from './FoodLogsTable.module.scss'
 
+// Number of skeleton rows to show while a fetch is in flight.
+const LOADING_ROWS = 12
+
+// ─── Excel export ────────────────────────────────────────────────────────────
+// Column labels for the exported sheet, kept in step with the table below.
+const EXCEL_HEADERS = [
+  'סוג שינוי',
+  'חומר',
+  'כמות',
+  'תאריך צריכה',
+  'יום בתקופה',
+  'תאריך שינוי',
+  'שעת שינוי',
+  'שונה ע"י',
+  'שדה',
+  'ערך ישן',
+  'ערך חדש',
+]
+
+/** Builds a real .xlsx workbook from the current rows and downloads it. */
+function exportExcel(rows: FoodLog[]): void {
+  const body = rows.map((row) => [
+    row.typeOfChange,
+    row.material,
+    row.quantity,
+    formatSapDate(row.consumptionDate),
+    row.dayInPeriod,
+    formatSapDate(row.changeDate),
+    formatSapTime(row.changeTime),
+    row.changedBy,
+    row.field,
+    row.oldValue,
+    row.newValue,
+  ])
+  const worksheet = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, ...body])
+  worksheet['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 16 }))
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'שינויים')
+  XLSX.writeFile(workbook, `food-logs-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+// ─── Change-type badge ───────────────────────────────────────────────────────
+// Colours the pill by the action verb at the start of the change description:
+// add → green, delete → red, anything else (update/edit) → amber.
+function ChangeTypeBadge({ value }: { value: string }) {
+  const tone = value.startsWith('הוספ')
+    ? styles.badgeAdd
+    : value.startsWith('מחיק')
+      ? styles.badgeDelete
+      : styles.badgeUpdate
+  return <span className={clsx(styles.badge, tone)}>{value}</span>
+}
+
 // ─── Column definitions ──────────────────────────────────────────────────────
-// All columns are sortable (TanStack Table's default). Date/time columns store
-// the raw SAP wire value (so sorting stays correct) and only format on display.
+// All data columns are sortable (TanStack Table's default). Date/time columns
+// store the raw SAP wire value (so sorting stays correct) and format on display.
 const columns: ColumnDef<FoodLog>[] = [
-  { accessorKey: 'typeOfChange', header: 'סוג שינוי' },
+  {
+    id: 'rowNumber',
+    header: '#',
+    size: 56,
+    enableSorting: false,
+    // Continuous 1-based counter following the current sort order, padded to
+    // two digits (01, 02, …) like the design.
+    cell: ({ row, table }) => {
+      const position = table.getSortedRowModel().rows.findIndex((r) => r.id === row.id)
+      return <span className={styles.rowNumber}>{String(position + 1).padStart(2, '0')}</span>
+    },
+  },
+  {
+    accessorKey: 'typeOfChange',
+    header: 'סוג',
+    cell: ({ getValue }) => <ChangeTypeBadge value={getValue<string>()} />,
+  },
   { accessorKey: 'material', header: 'חומר' },
   { accessorKey: 'quantity', header: 'כמות' },
   {
@@ -68,6 +139,7 @@ export function FoodLogsTable({
   onRetry,
 }: FoodLogsTableProps) {
   const toast = useToast()
+  const rows = data ?? []
 
   // Surface a toast whenever a fetch fails. Depend only on `isError` — the toast
   // manager object identity changes every render, so including it would loop.
@@ -138,18 +210,30 @@ export function FoodLogsTable({
 
   // ─── Loading / Success ─────────────────────────────────────────────────────
   return (
-    <DataTableRoot
-      columns={columns}
-      data={data ?? []}
-      isLoading={isLoading}
-      enableVirtualization
-      loadingRowsCount={8}
-      className={styles.tableWrapper!}
-    >
-      <DataTableContent>
-        <DataTableHeader />
-        <DataTableBody />
-      </DataTableContent>
-    </DataTableRoot>
+    <div className={styles.tableArea}>
+      {rows.length > 0 && (
+        <div className={styles.tableToolbar}>
+          <span className={styles.count}>
+            מציג <strong>{rows.length}</strong> שינויים
+          </span>
+          <Button variant="secondary" size="sm" onClick={() => exportExcel(rows)}>
+            <FileSpreadsheet size="1rem" aria-hidden />
+            ייצוא לאקסל
+          </Button>
+        </div>
+      )}
+      <DataTableRoot
+        columns={columns}
+        data={rows}
+        isLoading={isLoading}
+        loadingRowsCount={LOADING_ROWS}
+        className={styles.tableWrapper!}
+      >
+        <DataTableContent>
+          <DataTableHeader />
+          <DataTableBody />
+        </DataTableContent>
+      </DataTableRoot>
+    </div>
   )
 }

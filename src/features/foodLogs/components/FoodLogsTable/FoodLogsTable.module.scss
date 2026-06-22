@@ -1,33 +1,116 @@
 @layer components {
-  // Card shown for the idle / error / empty states.
+  // Card shown for the idle / error / empty states. Fills the main area and
+  // centres its message.
   .stateCard {
-    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--color-bg);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: var(--space-6);
   }
 
-  // Wrapper passed to the DataTable. It flexes to fill the remaining viewport
-  // height (the page is a fixed-height flex column), and its direct child — the
-  // DataTable's own scroll container — fills it and scrolls internally, so the
-  // sticky header stays pinned and the window never grows a scrollbar.
-  .tableWrapper {
+  // The table card: an export toolbar above a body that scrolls in both
+  // directions (vertical for all rows, horizontal so wide content is never
+  // cropped when the filter sidebar narrows the area).
+  .tableArea {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--color-bg);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: var(--space-4);
+    overflow: hidden;
+  }
 
+  // Small toolbar above the table holding the row count and the Excel export.
+  .tableToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-block-end: 1px solid var(--color-border);
+  }
+
+  // Row count, shown at the start (right in RTL) of the table toolbar.
+  .count {
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-muted);
+
+    strong {
+      color: var(--color-fg);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+
+  // Wrapper passed to the DataTable — flexes to fill the remaining height and
+  // makes its inner scroll container scroll in both directions.
+  .tableWrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    // The outer DataTable container owns both scroll axes…
     > div {
       flex: 1;
       min-height: 0;
-      max-height: none;
+      overflow: auto;
+
+      // …so the inner table primitive must not trap horizontal scroll below
+      // the fold with its own overflow.
+      > div {
+        overflow: visible;
+      }
     }
+
+    // Pin the header so it stays visible while the body scrolls vertically.
+    :global(thead th) {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--color-bg);
+    }
+  }
+
+  // ─── Change-type badge ──────────────────────────────────────────────────────
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-tight);
+    white-space: nowrap;
+  }
+
+  .badgeAdd {
+    background: color-mix(in oklch, var(--color-success) 16%, var(--color-bg));
+    color: var(--color-success-hover);
+  }
+
+  .badgeUpdate {
+    background: color-mix(in oklch, var(--color-warning) 26%, var(--color-bg));
+    color: color-mix(in oklch, var(--color-warning) 70%, black);
+  }
+
+  .badgeDelete {
+    background: color-mix(in oklch, var(--color-danger) 14%, var(--color-bg));
+    color: var(--color-danger);
+  }
+
+  // ─── Row number ─────────────────────────────────────────────────────────────
+  .rowNumber {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-subtle);
   }
 }

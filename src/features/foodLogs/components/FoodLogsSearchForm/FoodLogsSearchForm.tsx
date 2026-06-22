@@ -14,6 +14,7 @@ import type {
   SubmitButtonProps,
 } from '@uniform-ts/core'
 import { AutoForm, createForm } from '@uniform-ts/core'
+import { Filter } from 'lucide-react'
 import { createContext, useContext, useRef, useState } from 'react'
 import styles from './FoodLogsSearchForm.module.scss'
 
@@ -51,19 +52,16 @@ const DateRangeContext = createContext<DateRangeContextValue>({
   rangeError: null,
 })
 
-// ─── Submit + Reset buttons ───────────────────────────────────────────────────
+// ─── Submit button — full-width "apply filters" action at the panel's foot ─────
 function FormActionsButtons({ isSubmitting }: SubmitButtonProps) {
-  const { isDisabled, isLoading, onReset } = useContext(FormActionsContext)
+  const { isDisabled, isLoading } = useContext(FormActionsContext)
   const isBusy = isSubmitting || isLoading
 
   return (
     <div className={styles.actions}>
-      <Button type="submit" disabled={isBusy || isDisabled}>
+      <Button type="submit" className={styles.applyButton} disabled={isBusy || isDisabled}>
         {isBusy && <Spinner size="sm" color="inline" />}
-        חפש
-      </Button>
-      <Button type="button" variant="secondary" onClick={onReset}>
-        איפוס
+        החלת מסננים
       </Button>
     </div>
   )
@@ -76,11 +74,8 @@ function FormFieldWrapper({ children, field, error }: FieldWrapperProps) {
   const label = field.meta.label ?? field.label
   // For the dateFrom field, show the live range error in preference to any form error.
   const displayError = field.name === 'dateFrom' ? (rangeError ?? error) : error
-  // The date range holds two dates + an icon, so it spans two grid tracks.
-  // Using a class (not an inline style) lets media queries adjust it on small screens.
-  const className = field.name === 'dateFrom' ? styles.dateRangeField : undefined
   return (
-    <FieldRoot className={className}>
+    <FieldRoot>
       {isRequired ? (
         <FieldLabel indicator="required">{label}</FieldLabel>
       ) : (
@@ -286,31 +281,42 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
   return (
     <FormActionsContext.Provider value={contextValue}>
       <DateRangeContext.Provider value={dateRangeContextValue}>
-        <AutoForm
-          ref={formRef}
-          form={searchForm}
-          defaultValues={defaultValues}
-          onSubmit={handleSubmit}
-          fieldWrapper={FormFieldWrapper}
-          components={{ string: StringInput, date: DateFieldPicker }}
-          fields={{
-            foodBoard: { label: 'לוח מזון', component: NumericInput },
-            alternative: { label: 'חלופה', component: TwoDigitNumericInput },
-            dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
-            dateTo: { hidden: true },
-            material: { label: 'חומר', component: NumericInput },
-            consumptionDate: { label: 'תאריך צריכה' },
-            changeTime: { label: 'שעת שינוי', component: TimeInput },
-            changedBy: { label: 'שונה ע"י' },
-          }}
-          layout={{
-            submitButton: FormActionsButtons,
-          }}
-          classNames={{ form: styles.form! }}
-          onValuesChange={(vals) => {
-            setIsMandatoryFilled(!!(vals.foodBoard && vals.alternative))
-          }}
-        />
+        <div className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <span className={styles.panelTitle}>
+              <Filter size="1rem" aria-hidden />
+              מסננים
+            </span>
+            <Button type="button" variant="link" size="sm" onClick={handleReset}>
+              איפוס הכל
+            </Button>
+          </div>
+          <AutoForm
+            ref={formRef}
+            form={searchForm}
+            defaultValues={defaultValues}
+            onSubmit={handleSubmit}
+            fieldWrapper={FormFieldWrapper}
+            components={{ string: StringInput, date: DateFieldPicker }}
+            fields={{
+              foodBoard: { label: 'לוח מזון', component: NumericInput },
+              alternative: { label: 'חלופה', component: TwoDigitNumericInput },
+              dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
+              dateTo: { hidden: true },
+              material: { label: 'חומר', component: NumericInput },
+              consumptionDate: { label: 'תאריך צריכה' },
+              changeTime: { label: 'שעת שינוי', component: TimeInput },
+              changedBy: { label: 'שונה ע"י' },
+            }}
+            layout={{
+              submitButton: FormActionsButtons,
+            }}
+            classNames={{ form: styles.form! }}
+            onValuesChange={(vals) => {
+              setIsMandatoryFilled(!!(vals.foodBoard && vals.alternative))
+            }}
+          />
+        </div>
       </DateRangeContext.Provider>
     </FormActionsContext.Provider>
   )

@@ -6,7 +6,7 @@ export const foodLogsKeys = {
   all: () => ['foodLogs'] as const,
   search: (filter: FoodLogsFilter) => [...foodLogsKeys.all(), filter] as const,
 }
-
+// אופיר היה כאן
 export function useFoodLogs(filter: FoodLogsFilter | null) {
   return useQuery({
     queryKey: foodLogsKeys.search(filter!),

@@ -1,32 +1,48 @@
 @layer components {
-  .form {
-    display: grid;
-
-    // Responsive: as many equal tracks as fit. The row stays on one line on
-    // wide/full screens and wraps to more rows as the screen narrows. auto-fit
-    // collapses leftover tracks so the fields always fill the card width and
-    // never overflow it.
-    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-    gap: var(--space-4);
-    align-items: start;
+  // The whole filter sidebar: a full-height column with a fixed header, a
+  // scrollable field area, and the apply button pinned to the bottom.
+  .panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
   }
 
-  // The date range holds two dates + an icon, so it needs ~2 tracks of width.
-  .dateRangeField {
-    grid-column: span 2;
+  .panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-block-end: 1px solid var(--color-border);
   }
 
-  // Very narrow screens (small phones) may only fit a single track — let the
-  // range take the full row instead of spilling out of the card.
-  @media (width <= 420px) {
-    .dateRangeField {
-      grid-column: 1 / -1;
+  .panelTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-fg);
+
+    svg {
+      color: var(--color-icon);
     }
   }
 
-  // Forces the single DatePicker to fill its grid cell.
-  // .dateFieldWrapper > div  = DatePicker's inputWrapper (inline-flex row)
-  // > div:first-child        = DateInput's .field — needs flex: 1 to fill the row
+  // The fields stack vertically and scroll only as a last resort if they
+  // outgrow a very short sidebar.
+  .form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  // Forces the single DatePicker to fill its cell.
   .dateFieldWrapper > div {
     width: 100%;
   }
@@ -41,17 +57,20 @@
     line-height: var(--line-height-normal);
   }
 
+  // Pinned to the foot of the panel so the apply action stays reachable even
+  // when the fields above overflow and scroll. The negative insets let the bar
+  // span the panel's full width and sit flush with its bottom edge.
   .actions {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: row-reverse;
-    gap: var(--space-3);
-    align-items: center;
-    padding-block-start: var(--space-2);
+    position: sticky;
+    inset-block-end: calc(var(--space-4) * -1);
+    margin-block: auto calc(var(--space-4) * -1);
+    margin-inline: calc(var(--space-4) * -1);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg);
     border-block-start: 1px solid var(--color-border);
   }
 
-  .spinner {
-    margin-inline-end: var(--space-1);
+  .applyButton {
+    width: 100%;
   }
 }
