@@ -50,6 +50,13 @@
     }
   }
 
+  // Global search box, centred in the toolbar between the count and export.
+  .searchInput {
+    flex: 0 1 18rem;
+    min-width: 10rem;
+    margin-inline: auto;
+  }
+
   // Wrapper passed to the DataTable — flexes to fill the remaining height and
   // makes its inner scroll container scroll in both directions.
   .tableWrapper {

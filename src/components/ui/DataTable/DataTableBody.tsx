@@ -11,9 +11,11 @@ import TablePrimitive from './TablePrimitive'
 export interface DataTableBodyProps {
   rowsRef?: RefObject<Record<string, HTMLTableRowElement | null>>
   lastRowRef?: RefObject<HTMLTableRowElement | null>
+  /** Message shown when there are no rows to display. */
+  emptyMessage?: string
 }
 
-export function DataTableBody({ rowsRef, lastRowRef }: DataTableBodyProps) {
+export function DataTableBody({ rowsRef, lastRowRef, emptyMessage }: DataTableBodyProps) {
   const {
     table,
     rowVirtualizer,
@@ -89,7 +91,7 @@ export function DataTableBody({ rowsRef, lastRowRef }: DataTableBodyProps) {
           ))
         )
       ) : (
-        <Empty />
+        <Empty {...(emptyMessage !== undefined ? { message: emptyMessage } : {})} />
       )}
     </TablePrimitive.TableBody>
   )

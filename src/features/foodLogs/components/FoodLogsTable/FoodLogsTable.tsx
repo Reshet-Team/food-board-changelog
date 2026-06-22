@@ -14,13 +14,21 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/Empty/Empty'
+import { Input } from '@/components/ui/Input/Input'
 import { useToast } from '@/components/ui/Toast/useToast'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { formatSapDate, formatSapTime } from '@/utils/date'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { ArrowLeft, FileSearch, FileSpreadsheet, RotateCw, TriangleAlert } from 'lucide-react'
-import { useEffect } from 'react'
+import {
+  ArrowLeft,
+  FileSearch,
+  FileSpreadsheet,
+  RotateCw,
+  Search,
+  TriangleAlert,
+} from 'lucide-react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import * as XLSX from 'xlsx'
 import styles from './FoodLogsTable.module.scss'
 
@@ -42,6 +50,41 @@ const EXCEL_HEADERS = [
   'ערך ישן',
   'ערך חדש',
 ]
+
+// ─── Global search ───────────────────────────────────────────────────────────
+// Joins every displayed field of a row — including the human-formatted dates
+// and times — into one lowercase haystack so the search bar can match against
+// anything the user actually sees in the table.
+function rowSearchText(row: FoodLog): string {
+  return [
+    row.typeOfChange,
+    row.material,
+    row.quantity,
+    formatSapDate(row.consumptionDate),
+    row.consumptionDate,
+    row.dayInPeriod,
+    formatSapDate(row.changeDate),
+    row.changeDate,
+    formatSapTime(row.changeTime),
+    row.changeTime,
+    row.changedBy,
+    row.field,
+    row.oldValue,
+    row.newValue,
+  ]
+    .join(' ')
+    .toLowerCase()
+}
+
+/** Returns true when the row matches the (already trimmed, lowercased) query. */
+function matchesQuery(row: FoodLog, query: string): boolean {
+  return rowSearchText(row).includes(query)
+}
+
+// TanStack Table global filter: delegates to the shared matcher above so the
+// table and the row-count/export stay perfectly in sync.
+const globalFilterFn: FilterFn<FoodLog> = (row, _columnId, filterValue: string) =>
+  matchesQuery(row.original, filterValue.trim().toLowerCase())
 
 /** Builds a real .xlsx workbook from the current rows and downloads it. */
 function exportExcel(rows: FoodLog[]): void {
@@ -159,7 +202,17 @@ export function FoodLogsTable({
   onRetry,
 }: FoodLogsTableProps) {
   const toast = useToast()
-  const rows = data ?? []
+  const rows = useMemo(() => data ?? [], [data])
+
+  // Free-text search across every column. Kept in component state and fed to the
+  // table as a controlled global filter, so the row count and Excel export below
+  // reflect exactly what the user sees after filtering.
+  const [globalFilter, setGlobalFilter] = useState('')
+  const trimmedQuery = globalFilter.trim().toLowerCase()
+  const visibleRows = useMemo(
+    () => (trimmedQuery ? rows.filter((row) => matchesQuery(row, trimmedQuery)) : rows),
+    [rows, trimmedQuery],
+  )
 
   // Surface a toast whenever a fetch fails. Depend only on `isError` — the toast
   // manager object identity changes every render, so including it would loop.
@@ -234,9 +287,20 @@ export function FoodLogsTable({
       {rows.length > 0 && (
         <div className={styles.tableToolbar}>
           <span className={styles.count}>
-            מציג <strong>{rows.length}</strong> שינויים
+            מציג <strong>{visibleRows.length}</strong> שינויים
           </span>
-          <Button variant="secondary" size="sm" onClick={() => exportExcel(rows)}>
+          <Input
+            size="sm"
+            className={styles.searchInput}
+            placeholder="חיפוש בכל השדות…"
+            aria-label="חיפוש בטבלה"
+            value={globalFilter}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setGlobalFilter(event.currentTarget.value)
+            }
+            startSlot={<Search size="1rem" aria-hidden />}
+          />
+          <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
             <FileSpreadsheet size="1rem" aria-hidden />
             ייצוא לאקסל
           </Button>
@@ -248,10 +312,13 @@ export function FoodLogsTable({
         isLoading={isLoading}
         loadingRowsCount={LOADING_ROWS}
         className={styles.tableWrapper!}
+        globalFilterFn={globalFilterFn}
+        state={{ globalFilter }}
+        onGlobalFilterChange={setGlobalFilter}
       >
         <DataTableContent>
           <DataTableHeader />
-          <DataTableBody />
+          <DataTableBody emptyMessage="לא נמצאו תוצאות התואמות את החיפוש" />
         </DataTableContent>
       </DataTableRoot>
     </div>
