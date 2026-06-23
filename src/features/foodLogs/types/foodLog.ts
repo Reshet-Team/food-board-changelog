@@ -18,6 +18,14 @@ export interface FoodLogsFilter {
   changedBy?: string[] // USNAM  — One or more usernames who made the change
 }
 
+// ─── Alternative option (dropdown choice) ────────────────────────────────────
+// One selectable alternative (ALTNR) returned by the alternatives API.
+
+export interface AlternativeOption {
+  value: string // ALTNR — Alternative number (e.g. "04")
+  label: string // Human-readable description shown in the dropdown
+}
+
 // ─── Food Log Record (one table row) ────────────────────────────────────────
 // Represents a single change-log entry returned by SAP.
 

@@ -51,6 +51,13 @@
     flex: 1;
   }
 
+  // Greyed-out state for a date field that doesn't apply to the chosen
+  // alternative. `inert` on the element blocks interaction; this just dims it.
+  .disabledField {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .fieldError {
     font-size: var(--font-size-sm);
     color: var(--color-danger);

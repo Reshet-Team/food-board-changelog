@@ -3,8 +3,10 @@ import type { DateRangeValue } from '@/components/ui/DatePicker/DatePicker'
 import DatePicker from '@/components/ui/DatePicker/DatePicker'
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
+import { SelectItem, SelectList, SelectRoot, SelectTrigger } from '@/components/ui/Select/Select'
 import { Spinner } from '@/components/ui/Spinner/Spinner'
-import type { FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
+import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
+import type { AlternativeOption, FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
 import { foodLogsSearchSchema } from '@/features/foodLogs/types/foodLog'
 import { useNavigate } from '@tanstack/react-router'
 import type {
@@ -14,6 +16,7 @@ import type {
   SubmitButtonProps,
 } from '@uniform-ts/core'
 import { AutoForm, createForm } from '@uniform-ts/core'
+import clsx from 'clsx'
 import { Filter, X } from 'lucide-react'
 import { createContext, useContext, useRef, useState } from 'react'
 import styles from './FoodLogsSearchForm.module.scss'
@@ -49,6 +52,10 @@ interface DateRangeContextValue {
   rangeError: string | null
   consumptionRange: DateRangeValue | null
   onConsumptionRangeChange: (value: DateRangeValue | null) => void
+  // Whether the consumption-date range is applicable for the chosen alternative.
+  // When false the field is greyed out; when true it becomes required.
+  consumptionEnabled: boolean
+  consumptionError: string | null
 }
 
 const DateRangeContext = createContext<DateRangeContextValue>({
@@ -57,6 +64,19 @@ const DateRangeContext = createContext<DateRangeContextValue>({
   rangeError: null,
   consumptionRange: null,
   onConsumptionRangeChange: () => {},
+  consumptionEnabled: false,
+  consumptionError: null,
+})
+
+// ─── Context for passing the fetched alternative options into the select ──────
+interface AlternativesContextValue {
+  options: AlternativeOption[]
+  isLoading: boolean
+}
+
+const AlternativesContext = createContext<AlternativesContextValue>({
+  options: [],
+  isLoading: false,
 })
 
 // ─── Submit button — full-width "apply filters" action at the panel's foot ─────
@@ -76,11 +96,15 @@ function FormActionsButtons({ isSubmitting }: SubmitButtonProps) {
 
 // ─── Custom field wrapper — adds label with required indicator ────────────────
 function FormFieldWrapper({ children, field, error }: FieldWrapperProps) {
-  const { rangeError } = useContext(DateRangeContext)
-  const isRequired = REQUIRED_FIELDS.has(field.name)
+  const { rangeError, consumptionEnabled, consumptionError } = useContext(DateRangeContext)
+  // consumptionDateFrom is required only when the chosen alternative needs one.
+  const isRequired =
+    REQUIRED_FIELDS.has(field.name) || (field.name === 'consumptionDateFrom' && consumptionEnabled)
   const label = field.meta.label ?? field.label
-  // For the dateFrom field, show the live range error in preference to any form error.
-  const displayError = field.name === 'dateFrom' ? (rangeError ?? error) : error
+  // For the date fields, show the live range/consumption error over any form error.
+  let displayError = error
+  if (field.name === 'dateFrom') displayError = rangeError ?? error
+  if (field.name === 'consumptionDateFrom') displayError = consumptionError ?? error
   return (
     <FieldRoot>
       {isRequired ? (
@@ -129,20 +153,36 @@ function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
   )
 }
 
-// Same as NumericInput but capped at 2 characters (for `alternative`).
-function TwoDigitNumericInput({ value, onChange, onBlur, ref }: FieldProps) {
+// Alternative dropdown — populated from the alternatives API via context.
+function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
+  const { options, isLoading } = useContext(AlternativesContext)
+  const current = (value as string | undefined) ?? ''
+
   return (
-    <Input
-      ref={ref as React.Ref<HTMLInputElement>}
-      inputMode="numeric"
-      maxLength={2}
-      value={(value as string | undefined) ?? ''}
-      onChange={(e) => {
-        const digits = e.target.value.replace(/\D/g, '').slice(0, 2)
-        onChange(digits)
+    <SelectRoot
+      items={options}
+      value={current === '' ? null : current}
+      onValueChange={(next: string | null) => {
+        onChange(next ?? '')
+        onBlur()
       }}
-      onBlur={onBlur}
-    />
+    >
+      <SelectTrigger
+        size="md"
+        disabled={isLoading}
+        style={{ width: '100%' }}
+        placeholder={isLoading ? 'טוען…' : 'בחר חלופה'}
+      >
+        {(item: string) => options.find((option) => option.value === item)?.label ?? item}
+      </SelectTrigger>
+      <SelectList>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectList>
+    </SelectRoot>
   )
 }
 
@@ -166,12 +206,17 @@ function DateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
   )
 }
 
-// Single date picker — used for consumptionDate
+// Consumption-date range picker. Greyed out and non-interactive (via `inert`)
+// when the chosen alternative doesn't support a consumption date.
 function ConsumptionDateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
-  const { consumptionRange, onConsumptionRangeChange } = useContext(DateRangeContext)
+  const { consumptionRange, onConsumptionRangeChange, consumptionEnabled } =
+    useContext(DateRangeContext)
 
   return (
-    <div className={styles.dateFieldWrapper}>
+    <div
+      className={clsx(styles.dateFieldWrapper, !consumptionEnabled && styles.disabledField)}
+      inert={!consumptionEnabled || undefined}
+    >
       <DatePicker
         mode="range"
         value={consumptionRange}
@@ -301,6 +346,12 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
   const formRef = useRef<AutoFormHandle<typeof foodLogsSearchSchema>>(null)
   const navigate = useNavigate()
 
+  // Alternative options for the dropdown (global list, cached for the session).
+  const { data: alternatives, isLoading: alternativesLoading } = useAlternatives()
+
+  // The currently selected alternative drives the consumption-date rules.
+  const [alternativeValue, setAlternativeValue] = useState(() => defaultValues.alternative)
+
   // Range picker local state — controls the displayed date range.
   // Both start and end are merged into the submitted data in handleSubmit.
   const [rangePickerValue, setRangePickerValue] = useState<DateRangeValue | null>(() => ({
@@ -334,19 +385,27 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     () => !!(defaultValues.foodBoard && defaultValues.alternative),
   )
 
+  // Alternatives 4 & 6 ("daily") require a consumption date; all others (incl.
+  // the monthly 3 & 5) can't have one, so the field is greyed out.
+  const altNum = Number(alternativeValue)
+  const consumptionEnabled = altNum === 4 || altNum === 6
+  const consumptionError =
+    consumptionEnabled && !consumptionRange ? 'יש לבחור טווח תאריכי צריכה' : null
+
   function handleSubmit(data: FoodLogsSearchParams) {
     const dateFrom = rangePickerValue?.start ?? data.dateFrom
     const dateTo = rangePickerValue?.end ?? data.dateTo
 
     if (rangeError) return
+    if (consumptionEnabled && !consumptionRange) return
     void navigate({
       to: '/food-logs',
       search: {
         ...data,
         dateFrom,
         dateTo,
-        consumptionDateFrom: consumptionRange?.start,
-        consumptionDateTo: consumptionRange?.end,
+        consumptionDateFrom: consumptionEnabled ? consumptionRange?.start : undefined,
+        consumptionDateTo: consumptionEnabled ? consumptionRange?.end : undefined,
       },
     })
   }
@@ -357,6 +416,7 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     setRangePickerValue({ start: yesterday, end: today })
     setRangeError(null)
     setConsumptionRange(null)
+    setAlternativeValue('')
     formRef.current?.reset({
       foodBoard: '',
       alternative: '',
@@ -374,7 +434,11 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
   }
 
   const contextValue: FormActionsContextValue = {
-    isDisabled: !isMandatoryFilled || !rangePickerValue || rangeError !== null,
+    isDisabled:
+      !isMandatoryFilled ||
+      !rangePickerValue ||
+      rangeError !== null ||
+      (consumptionEnabled && !consumptionRange),
     isLoading,
     onReset: handleReset,
   }
@@ -385,50 +449,66 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
     rangeError,
     consumptionRange,
     onConsumptionRangeChange: setConsumptionRange,
+    consumptionEnabled,
+    consumptionError,
+  }
+
+  const alternativesContextValue: AlternativesContextValue = {
+    options: alternatives ?? [],
+    isLoading: alternativesLoading,
   }
 
   return (
     <FormActionsContext.Provider value={contextValue}>
       <DateRangeContext.Provider value={dateRangeContextValue}>
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.panelTitle}>
-              <Filter size="1rem" aria-hidden />
-              מסננים
-            </span>
-            <Button type="button" variant="link" size="sm" onClick={handleReset}>
-              איפוס הכל
-            </Button>
+        <AlternativesContext.Provider value={alternativesContextValue}>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <span className={styles.panelTitle}>
+                <Filter size="1rem" aria-hidden />
+                מסננים
+              </span>
+              <Button type="button" variant="link" size="sm" onClick={handleReset}>
+                איפוס הכל
+              </Button>
+            </div>
+            <AutoForm
+              ref={formRef}
+              form={searchForm}
+              defaultValues={defaultValues}
+              onSubmit={handleSubmit}
+              fieldWrapper={FormFieldWrapper}
+              components={{ string: StringInput }}
+              fields={{
+                foodBoard: { label: 'לוח מזון', component: NumericInput },
+                alternative: { label: 'חלופה', component: AlternativeSelect },
+                dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
+                dateTo: { hidden: true },
+                material: { label: 'חומר', component: MaterialChipsInput },
+                consumptionDateFrom: {
+                  label: 'טווח תאריכי צריכה',
+                  component: ConsumptionDateRangeFieldPicker,
+                },
+                consumptionDateTo: { hidden: true },
+                changedBy: { label: 'שונה ע"י', component: ChangedByChipsInput },
+              }}
+              layout={{
+                submitButton: FormActionsButtons,
+              }}
+              classNames={{ form: styles.form! }}
+              onValuesChange={(vals) => {
+                setIsMandatoryFilled(!!(vals.foodBoard && vals.alternative))
+                const alt = vals.alternative
+                setAlternativeValue(alt)
+                // Clear any consumption range when the alternative can't have one.
+                const num = Number(alt)
+                if (num !== 4 && num !== 6) {
+                  setConsumptionRange((prev) => (prev ? null : prev))
+                }
+              }}
+            />
           </div>
-          <AutoForm
-            ref={formRef}
-            form={searchForm}
-            defaultValues={defaultValues}
-            onSubmit={handleSubmit}
-            fieldWrapper={FormFieldWrapper}
-            components={{ string: StringInput }}
-            fields={{
-              foodBoard: { label: 'לוח מזון', component: NumericInput },
-              alternative: { label: 'חלופה', component: TwoDigitNumericInput },
-              dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
-              dateTo: { hidden: true },
-              material: { label: 'חומר', component: MaterialChipsInput },
-              consumptionDateFrom: {
-                label: 'טווח תאריכי צריכה',
-                component: ConsumptionDateRangeFieldPicker,
-              },
-              consumptionDateTo: { hidden: true },
-              changedBy: { label: 'שונה ע"י', component: ChangedByChipsInput },
-            }}
-            layout={{
-              submitButton: FormActionsButtons,
-            }}
-            classNames={{ form: styles.form! }}
-            onValuesChange={(vals) => {
-              setIsMandatoryFilled(!!(vals.foodBoard && vals.alternative))
-            }}
-          />
-        </div>
+        </AlternativesContext.Provider>
       </DateRangeContext.Provider>
     </FormActionsContext.Provider>
   )

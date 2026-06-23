@@ -152,7 +152,7 @@ const columns: ColumnDef<FoodLog>[] = [
   },
   {
     accessorKey: 'typeOfChange',
-    header: 'סוג',
+    header: 'סוג שינוי',
     cell: ({ getValue }) => <ChangeTypeBadge value={getValue<string>()} />,
   },
   { accessorKey: 'material', header: 'חומר' },
@@ -286,9 +286,8 @@ export function FoodLogsTable({
     <div className={styles.tableArea}>
       {rows.length > 0 && (
         <div className={styles.tableToolbar}>
-          <span className={styles.count}>
-            מציג <strong>{visibleRows.length}</strong> שינויים
-          </span>
+          <div style={{display: 'flex', gap: '1rem'}}>
+
           <Input
             size="sm"
             className={styles.searchInput}
@@ -299,11 +298,15 @@ export function FoodLogsTable({
               setGlobalFilter(event.currentTarget.value)
             }
             startSlot={<Search size="1rem" aria-hidden />}
-          />
+            />
           <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
             <FileSpreadsheet size="1rem" aria-hidden />
             ייצוא לאקסל
           </Button>
+            </div>
+          <span className={styles.count}>
+            מציג <strong>{visibleRows.length}</strong> שינויים
+          </span>
         </div>
       )}
       <DataTableRoot
