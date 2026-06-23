@@ -71,9 +71,18 @@
       min-height: 0;
       overflow: auto;
 
+      // Force LTR on the scroll container so the vertical scrollbar sits on the
+      // right edge; the inner content is switched back to RTL below.
+      direction: ltr;
+
+      // Inset the rows from the card border so their rounded backgrounds never
+      // sit flush against the edge of the table card.
+      padding-inline: var(--space-4);
+
       // …so the inner table primitive must not trap horizontal scroll below
       // the fold with its own overflow.
       > div {
+        direction: rtl;
         overflow: visible;
       }
     }
@@ -100,12 +109,10 @@
 
     th,
     td {
-      // Contain each column so long values never bleed into the next one, while
-      // `overflow-wrap` lets unbroken values (18-digit materials, dates) wrap
-      // onto a new line. Rows grow in height as needed; if a value is still too
-      // long for the available room it is clipped rather than overflowing.
+      // Contain each column so long values never bleed into the next one. The
+      // per-cell `TextCell` decides whether to truncate (single token) or wrap
+      // (multi-word) — see the `.truncate` / `.wrap` rules below.
       overflow: hidden;
-      overflow-wrap: anywhere;
       text-align: center;
     }
 
@@ -118,33 +125,29 @@
     // Proportional column widths (sum = 100%). `!important` is required to beat
     // the inline pixel width the DataTable sets on each cell. If a column is
     // added or removed, rebalance these so they still total 100%.
-    [data-column-id='material'] {
-      width: 10% !important;
-    }
-
     [data-column-id='valueChange'] {
-      width: 14% !important;
+      width: 16% !important;
     }
 
+    [data-column-id='typeOfChange'] {
+      width: 11% !important;
+    }
+
+    [data-column-id='material'],
     [data-column-id='field'],
     [data-column-id='consumptionDate'],
-    [data-column-id='changeDate'],
-    [data-column-id='typeOfChange'] {
+    [data-column-id='changeDate'] {
       width: 10% !important;
     }
 
     [data-column-id='changeTime'],
-    [data-column-id='dayInPeriod'] {
+    [data-column-id='dayInPeriod'],
+    [data-column-id='changedBy'] {
       width: 9% !important;
     }
 
-    [data-column-id='changedBy'] {
-      width: 8% !important;
-    }
-
-    [data-column-id='quantity'],
-    [data-column-id='rowNumber'] {
-      width: 5% !important;
+    [data-column-id='quantity'] {
+      width: 6% !important;
     }
   }
 
@@ -175,17 +178,31 @@
     color: var(--color-danger);
   }
 
-  // ─── Row number ─────────────────────────────────────────────────────────────
-  .rowNumber {
-    font-variant-numeric: tabular-nums;
-    font-size: var(--font-size-sm);
-    color: var(--color-fg-subtle);
+  // ─── Cell text overflow ─────────────────────────────────────────────────────
+  // A single long token (material number, username) is clipped on one line with
+  // an ellipsis; the full value is available via the cell's `title` tooltip.
+  .truncate {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // A value containing a space wraps onto the next line, breaking only between
+  // words — never mid-word.
+  .wrap {
+    display: block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: keep-all;
   }
 
   // ─── Value change (old → new) ───────────────────────────────────────────────
   .valueChange {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     max-width: 100%;
     align-items: center;
     justify-content: center;
@@ -194,10 +211,12 @@
     font-size: var(--font-size-sm);
   }
 
+  // Let each value shrink and truncate (via `.truncate`) when the pair is too
+  // wide for the column, instead of pushing the layout or wrapping.
   .oldValue,
   .newValue {
     min-width: 0;
-    overflow-wrap: anywhere;
+    flex: 0 1 auto;
   }
 
   .oldValue {
@@ -212,6 +231,14 @@
 
   .valueArrow {
     flex-shrink: 0;
+    color: var(--color-fg-subtle);
+  }
+
+  // Combined tooltip shown when BOTH the old and new values are clipped.
+  .tooltipPair {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     color: var(--color-fg-subtle);
   }
 }

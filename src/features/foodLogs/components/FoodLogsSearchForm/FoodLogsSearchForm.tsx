@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button/Button'
+import { Checkbox } from '@/components/ui/Checkbox/Checkbox'
 import type { DateRangeValue } from '@/components/ui/DatePicker/DatePicker'
 import DatePicker from '@/components/ui/DatePicker/DatePicker'
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
@@ -8,6 +9,11 @@ import { Spinner } from '@/components/ui/Spinner/Spinner'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import type { AlternativeOption, FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
 import { foodLogsSearchSchema } from '@/features/foodLogs/types/foodLog'
+import {
+  ALL_CHANGE_TYPES,
+  CHANGE_TYPE_OPTIONS,
+  type ChangeType,
+} from '@/features/foodLogs/utils/changeType'
 import { useNavigate } from '@tanstack/react-router'
 import type {
   AutoFormHandle,
@@ -286,7 +292,7 @@ function ChipsInput({
         ref={inputRef}
         autoComplete="off"
         inputMode={digitsOnly ? 'numeric' : undefined}
-        placeholder="הקלידו וה-Enter להוספה"
+        placeholder="הקלידו ולחצו על ENTER להוספה"
         value={draft}
         onChange={(e) => {
           const next = digitsOnly ? e.target.value.replace(/\D/g, '') : e.target.value
@@ -340,9 +346,17 @@ function ChangedByChipsInput({ value, onChange, onBlur, ref }: FieldProps<string
 export interface FoodLogsSearchFormProps {
   defaultValues: FoodLogsSearchParams
   isLoading: boolean
+  /** Local change-type categories applied to the results after they arrive. */
+  changeTypes: ChangeType[]
+  onChangeTypesChange: (value: ChangeType[]) => void
 }
 
-export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchFormProps) {
+export function FoodLogsSearchForm({
+  defaultValues,
+  isLoading,
+  changeTypes,
+  onChangeTypesChange,
+}: FoodLogsSearchFormProps) {
   const formRef = useRef<AutoFormHandle<typeof foodLogsSearchSchema>>(null)
   const navigate = useNavigate()
 
@@ -428,6 +442,8 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
       changedBy: undefined,
     })
     setIsMandatoryFilled(false)
+    // Reselect every change-type category so the default is "show everything".
+    onChangeTypesChange(ALL_CHANGE_TYPES)
     // Clear the URL search params too. The table is driven by the URL, so this
     // empties the results, and a later refresh won't repopulate stale fields.
     void navigate({ to: '/food-logs', search: foodLogsSearchSchema.parse({}) })
@@ -507,6 +523,33 @@ export function FoodLogsSearchForm({ defaultValues, isLoading }: FoodLogsSearchF
                 }
               }}
             />
+            <div className={styles.changeTypeFilter}>
+              <span className={styles.changeTypeLabel}>סוג שינוי</span>
+              <div className={styles.checkboxGroup}>
+                {CHANGE_TYPE_OPTIONS.map((option) => {
+                  const checked = changeTypes.includes(option.value)
+                  // Keep at least one category selected: the last remaining
+                  // checkbox can't be unticked.
+                  const isLastChecked = checked && changeTypes.length === 1
+                  return (
+                    <Checkbox
+                      key={option.value}
+                      size="sm"
+                      label={option.label}
+                      checked={checked}
+                      disabled={isLastChecked}
+                      onCheckedChange={(next) => {
+                        if (next) {
+                          onChangeTypesChange([...changeTypes, option.value])
+                        } else if (changeTypes.length > 1) {
+                          onChangeTypesChange(changeTypes.filter((t) => t !== option.value))
+                        }
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </AlternativesContext.Provider>
       </DateRangeContext.Provider>

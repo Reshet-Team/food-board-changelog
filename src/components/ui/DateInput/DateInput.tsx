@@ -78,7 +78,8 @@ type SingleFieldProps = AriaDateFieldProps<CalendarDate> & {
 function SingleField({
   className,
   iconSpacing,
-  locale = navigator.language,
+  // Pin to a day-first locale so segments always read day/month/year.
+  locale = 'en-GB',
   ...props
 }: SingleFieldProps) {
   const state = useDateFieldState({ ...props, locale, createCalendar })
@@ -111,7 +112,8 @@ type RangeFieldProps = AriaDateRangePickerProps<DateValue> & {
 function RangeField({
   className,
   iconSpacing,
-  locale = navigator.language,
+  // Pin to a day-first locale so segments always read day/month/year.
+  locale = 'en-GB',
   ...props
 }: RangeFieldProps) {
   const groupRef = useRef<HTMLDivElement>(null)
@@ -183,7 +185,8 @@ function RangeField({
 function RangeInlineField({
   className,
   iconSpacing,
-  locale = navigator.language,
+  // Pin to a day-first locale so segments always read day/month/year.
+  locale = 'en-GB',
   ...props
 }: RangeFieldProps) {
   const groupRef = useRef<HTMLDivElement>(null)

@@ -30,6 +30,7 @@ export interface AlternativeOption {
 // Represents a single change-log entry returned by SAP.
 
 export interface FoodLog {
+  alternative?: string // ALTNR     — Alternative number (CHAR2, zero-padded)
   typeOfChange: string // DDTEXT    — Description of the change type
   material: string // MATNR     — Material number (CHAR18, zero-padded)
   quantity: number // KMPMG     — Component quantity

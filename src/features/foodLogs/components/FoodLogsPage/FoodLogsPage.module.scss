@@ -7,28 +7,15 @@
     background-color: var(--color-bg-subtle);
   }
 
-  // ─── App header (title + SAP sync status / utility actions) ─────────────────
+  // ─── App header (title only) ────────────────────────────────────────────────
   .appHeader {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-3);
     flex-wrap: wrap;
     padding: var(--space-3) var(--space-5);
     background: var(--color-bg);
     border-block-end: 1px solid var(--color-border);
-  }
-
-  .appHeaderStart {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  .appHeaderEnd {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
   }
 
   .appTitle {
@@ -36,37 +23,6 @@
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
     color: var(--color-fg);
-  }
-
-  .syncBadge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 2px var(--space-3);
-    border-radius: var(--radius-full);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    background: color-mix(in oklch, var(--color-success) 16%, var(--color-bg));
-    color: var(--color-success-hover);
-  }
-
-  .syncDot {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-full);
-    background: var(--color-success);
-  }
-
-  // ─── Top toolbar ────────────────────────────────────────────────────────────
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-    padding: var(--space-3) var(--space-5);
-    background: var(--color-bg);
-    border-block-end: 1px solid var(--color-border);
   }
 
   // ─── Body: table (start/right) + filter sidebar (end/left) ──────────────────

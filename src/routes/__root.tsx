@@ -1,4 +1,5 @@
 import { ToastProvider } from '@/components/ui/Toast/Toast'
+import { TooltipProvider } from '@/components/ui/Tooltip/Tooltip'
 import { ThemeProvider } from '@/theme/useTheme'
 import { DirectionProvider } from '@base-ui/react/direction-provider'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -20,7 +21,9 @@ function RootComponent() {
     <ThemeProvider>
       <DirectionProvider direction="rtl">
         <ToastProvider>
-          <Outlet />
+          <TooltipProvider delay={300} closeDelay={100}>
+            <Outlet />
+          </TooltipProvider>
           <TanStackDevtools
             config={{ position: 'bottom-left' }}
             plugins={[

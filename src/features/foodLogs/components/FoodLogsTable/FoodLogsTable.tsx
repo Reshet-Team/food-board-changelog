@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/Empty/Empty'
 import { Input } from '@/components/ui/Input/Input'
 import { useToast } from '@/components/ui/Toast/useToast'
+import { TooltipContent, TooltipRoot, TooltipTrigger } from '@/components/ui/Tooltip/Tooltip'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
+import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/changeType'
 import { formatSapDate, formatSapTime } from '@/utils/date'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import clsx from 'clsx'
@@ -28,7 +30,7 @@ import {
   Search,
   TriangleAlert,
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import * as XLSX from 'xlsx'
 import styles from './FoodLogsTable.module.scss'
 
@@ -57,7 +59,7 @@ const EXCEL_HEADERS = [
 // anything the user actually sees in the table.
 function rowSearchText(row: FoodLog): string {
   return [
-    row.typeOfChange,
+    changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
     formatSapDate(row.consumptionDate),
@@ -89,7 +91,7 @@ const globalFilterFn: FilterFn<FoodLog> = (row, _columnId, filterValue: string) 
 /** Builds a real .xlsx workbook from the current rows and downloads it. */
 function exportExcel(rows: FoodLog[]): void {
   const body = rows.map((row) => [
-    row.typeOfChange,
+    changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
     formatSapDate(row.consumptionDate),
@@ -105,32 +107,121 @@ function exportExcel(rows: FoodLog[]): void {
   worksheet['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 16 }))
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'שינויים')
-  XLSX.writeFile(workbook, `food-logs-${new Date().toISOString().slice(0, 10)}.xlsx`)
+  XLSX.writeFile(workbook, `Food_Logs_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 // ─── Change-type badge ───────────────────────────────────────────────────────
-// Colours the pill by the action verb at the start of the change description:
-// add → green, delete → red, anything else (update/edit) → amber.
-function ChangeTypeBadge({ value }: { value: string }) {
-  const tone = value.startsWith('הוספ')
-    ? styles.badgeAdd
-    : value.startsWith('מחיק')
-      ? styles.badgeDelete
-      : styles.badgeUpdate
-  return <span className={clsx(styles.badge, tone)}>{value}</span>
+// Translates the raw SAP indicator code (U / E / D / I / J) into a Hebrew label
+// and colours the pill by category: add → green, delete → red, update → amber.
+function ChangeTypeBadge({ code }: { code: string }) {
+  const category = classifyChangeType(code)
+  const tone =
+    category === 'add'
+      ? styles.badgeAdd
+      : category === 'delete'
+        ? styles.badgeDelete
+        : styles.badgeUpdate
+  return <span className={clsx(styles.badge, tone)}>{changeTypeLabel(code)}</span>
+}
+
+// ─── Clip detection ──────────────────────────────────────────────────────────
+// Only a single unbroken token (an 18-digit material number, a username) is
+// clipped with an ellipsis; a value containing a space is allowed to wrap onto
+// the next line instead. This hook watches the rendered width and reports
+// whether a single-token value actually overflows its cell. Column widths are
+// responsive, so it re-measures whenever the cell is resized.
+function useClip(value: string) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [isClipped, setIsClipped] = useState(false)
+
+  const trimmed = value.trim()
+  const isSingleToken = trimmed.length > 0 && !/\s/.test(trimmed)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !isSingleToken) {
+      setIsClipped(false)
+      return
+    }
+    const measure = () => setIsClipped(el.scrollWidth > el.clientWidth)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [value, isSingleToken])
+
+  return { ref, isClipped, isSingleToken }
+}
+
+// ─── Text cell ───────────────────────────────────────────────────────────────
+// Renders a single value, clipped or wrapped. The Reshet tooltip is always
+// mounted so the measured span never remounts; it only opens
+// (`disabled={!isClipped}`) when the value actually overflows, showing the full
+// text on hover.
+function TextCell({ value, className }: { value: string; className?: string | undefined }) {
+  const { ref, isClipped, isSingleToken } = useClip(value)
+  return (
+    <TooltipRoot>
+      <TooltipTrigger
+        disabled={!isClipped}
+        render={
+          <span
+            ref={ref}
+            className={clsx(isSingleToken ? styles.truncate : styles.wrap, className)}
+          >
+            {value}
+          </span>
+        }
+      />
+      <TooltipContent>{value}</TooltipContent>
+    </TooltipRoot>
+  )
 }
 
 // ─── Value change ────────────────────────────────────────────────────────────
 // Shows the change inline: the old value (red) with an arrow pointing to the
 // new value (green). In RTL the arrow points to the inline-end (left), so the
 // flow reads old → new.
+//
+// Tooltip behaviour: a single Reshet tooltip spans the whole cell and shows
+// both full values together. It is always mounted (so the measured spans never
+// remount) and only opens (`disabled={!anyClipped}`) when either value
+// overflows, no matter where inside the cell the user hovers.
 function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: string }) {
+  const { ref: oldRef, isClipped: oldClipped, isSingleToken: oldSingle } = useClip(oldValue)
+  const { ref: newRef, isClipped: newClipped, isSingleToken: newSingle } = useClip(newValue)
+  const anyClipped = oldClipped || newClipped
+
   return (
-    <span className={styles.valueChange}>
-      <span className={styles.oldValue}>{oldValue}</span>
-      <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
-      <span className={styles.newValue}>{newValue}</span>
-    </span>
+    <TooltipRoot>
+      <TooltipTrigger
+        disabled={!anyClipped}
+        render={
+          <span className={styles.valueChange}>
+            <span
+              ref={oldRef}
+              className={clsx(oldSingle ? styles.truncate : styles.wrap, styles.oldValue)}
+            >
+              {oldValue}
+            </span>
+            <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
+            <span
+              ref={newRef}
+              className={clsx(newSingle ? styles.truncate : styles.wrap, styles.newValue)}
+            >
+              {newValue}
+            </span>
+          </span>
+        }
+      />
+      <TooltipContent>
+        <span className={styles.tooltipPair}>
+          <span className={styles.oldValue}>{oldValue}</span>
+          <ArrowLeft size="0.85rem" aria-hidden />
+          <span className={styles.newValue}>{newValue}</span>
+        </span>
+      </TooltipContent>
+    </TooltipRoot>
   )
 }
 
@@ -139,30 +230,30 @@ function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: strin
 // store the raw SAP wire value (so sorting stays correct) and format on display.
 const columns: ColumnDef<FoodLog>[] = [
   {
-    id: 'rowNumber',
-    header: '#',
-    size: 56,
-    enableSorting: false,
-    // Continuous 1-based counter following the current sort order, padded to
-    // two digits (01, 02, …) like the design.
-    cell: ({ row, table }) => {
-      const position = table.getSortedRowModel().rows.findIndex((r) => r.id === row.id)
-      return <span className={styles.rowNumber}>{String(position + 1).padStart(2, '0')}</span>
-    },
-  },
-  {
     accessorKey: 'typeOfChange',
     header: 'סוג שינוי',
-    cell: ({ getValue }) => <ChangeTypeBadge value={getValue<string>()} />,
+    cell: ({ getValue }) => <ChangeTypeBadge code={getValue<string>()} />,
   },
-  { accessorKey: 'material', header: 'חומר' },
-  { accessorKey: 'quantity', header: 'כמות' },
+  {
+    accessorKey: 'material',
+    header: 'חומר',
+    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+  },
+  {
+    accessorKey: 'quantity',
+    header: 'כמות',
+    cell: ({ getValue }) => <TextCell value={String(getValue<number>())} />,
+  },
   {
     accessorKey: 'consumptionDate',
     header: 'תאריך צריכה',
     cell: ({ getValue }) => formatSapDate(getValue<string>()),
   },
-  { accessorKey: 'dayInPeriod', header: 'יום בתקופה' },
+  {
+    accessorKey: 'dayInPeriod',
+    header: 'יום בתקופה',
+    cell: ({ getValue }) => <TextCell value={String(getValue<number>())} />,
+  },
   {
     accessorKey: 'changeDate',
     header: 'תאריך שינוי',
@@ -173,15 +264,32 @@ const columns: ColumnDef<FoodLog>[] = [
     header: 'שעת שינוי',
     cell: ({ getValue }) => formatSapTime(getValue<string>()),
   },
-  { accessorKey: 'changedBy', header: 'שונה ע"י' },
-  { accessorKey: 'field', header: 'שדה' },
+  {
+    accessorKey: 'changedBy',
+    header: 'שונה ע"י',
+    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+  },
+  {
+    accessorKey: 'field',
+    header: 'שדה',
+    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+  },
   {
     id: 'valueChange',
     header: 'שינוי ערך',
     enableSorting: false,
-    cell: ({ row }) => (
-      <ValueChange oldValue={row.original.oldValue} newValue={row.original.newValue} />
-    ),
+    cell: ({ row }) => {
+      // A delete carries only the old value (red); an insert only the new value
+      // (green); an update shows the full old → new transition.
+      const category = classifyChangeType(row.original.typeOfChange)
+      if (category === 'delete') {
+        return <TextCell value={row.original.oldValue} className={styles.oldValue} />
+      }
+      if (category === 'add') {
+        return <TextCell value={row.original.newValue} className={styles.newValue} />
+      }
+      return <ValueChange oldValue={row.original.oldValue} newValue={row.original.newValue} />
+    },
   },
 ]
 
@@ -192,6 +300,8 @@ export interface FoodLogsTableProps {
   /** Whether a search has been submitted (mandatory fields filled). */
   hasSearched: boolean
   onRetry: () => void
+  /** Rendered in the toolbar, to the left of the Excel export. */
+  filtersSlot?: ReactNode
 }
 
 export function FoodLogsTable({
@@ -200,6 +310,7 @@ export function FoodLogsTable({
   isError,
   hasSearched,
   onRetry,
+  filtersSlot,
 }: FoodLogsTableProps) {
   const toast = useToast()
   const rows = useMemo(() => data ?? [], [data])
@@ -286,24 +397,24 @@ export function FoodLogsTable({
     <div className={styles.tableArea}>
       {rows.length > 0 && (
         <div className={styles.tableToolbar}>
-          <div style={{display: 'flex', gap: '1rem'}}>
-
-          <Input
-            size="sm"
-            className={styles.searchInput}
-            placeholder="חיפוש בכל השדות…"
-            aria-label="חיפוש בטבלה"
-            value={globalFilter}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setGlobalFilter(event.currentTarget.value)
-            }
-            startSlot={<Search size="1rem" aria-hidden />}
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Input
+              size="sm"
+              className={styles.searchInput}
+              placeholder="חיפוש בכל השדות…"
+              aria-label="חיפוש בטבלה"
+              value={globalFilter}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setGlobalFilter(event.currentTarget.value)
+              }
+              startSlot={<Search size="1rem" aria-hidden />}
             />
-          <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
-            <FileSpreadsheet size="1rem" aria-hidden />
-            ייצוא לאקסל
-          </Button>
-            </div>
+            <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
+              <FileSpreadsheet size="1rem" aria-hidden />
+              ייצוא לאקסל
+            </Button>
+            {filtersSlot}
+          </div>
           <span className={styles.count}>
             מציג <strong>{visibleRows.length}</strong> שינויים
           </span>

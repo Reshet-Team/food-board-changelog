@@ -125,4 +125,27 @@
   .applyButton {
     width: 100%;
   }
+
+  // ─── Change-type local filter ───────────────────────────────────────────────
+  // Checkboxes below the form. They filter the already-fetched results by the
+  // change action and never participate in the SAP request.
+  .changeTypeFilter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .changeTypeLabel {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-fg);
+  }
+
+  .checkboxGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
 }
