@@ -1,20 +1,20 @@
-import * as React from 'react'
+import type * as React from 'react'
 
 /**
  * Extracts component slot props from a Base UI component namespace.
  *
- * @template Namespace - The `typeof Component` object (e.g., `typeof Menu`)
- * @template IncludedSlots - (Optional) A union of slot names to include (e.g., `'popup' | 'listbox'`)
+ * @template TNamespace - The `typeof Component` object (e.g., `typeof Menu`)
+ * @template TIncludedSlots - (Optional) A union of slot names to include (e.g., `'popup' | 'listbox'`)
  */
 export type SlotProps<
-  Namespace extends Record<string, unknown>,
-  IncludedSlots extends SlotNames<Namespace> = SlotNames<Namespace>,
-> = Pick<Slots<Namespace>, keyof Slots<Namespace> & `${IncludedSlots & string}Props`>
+  TNamespace extends Record<string, unknown>,
+  TIncludedSlots extends SlotNames<TNamespace> = SlotNames<TNamespace>,
+> = Pick<Slots<TNamespace>, keyof Slots<TNamespace> & `${TIncludedSlots & string}Props`>
 
-type ExtractProps<C> =
-  C extends React.ForwardRefExoticComponent<infer P>
+type ExtractProps<TComponent> =
+  TComponent extends React.ForwardRefExoticComponent<infer P>
     ? P
-    : C extends React.ComponentType<infer P>
+    : TComponent extends React.ComponentType<infer P>
       ? P
       : never
 

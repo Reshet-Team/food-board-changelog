@@ -5,12 +5,12 @@ import React from 'react'
  * Binds a base CSS module class to a component while preserving its full type.
  * Any `className` passed at usage-time is merged in via clsx.
  */
-export function styled<P>(
-  Component: React.ComponentType<P>,
+export function styled<TProps>(
+  Component: React.ComponentType<TProps>,
   baseClass: string | undefined,
 ): typeof Component {
-  const Styled = (props: P & { className?: string }) => (
-    <Component {...(props as P)} className={clsx(baseClass, props.className)} />
+  const Styled = (props: TProps & { className?: string }) => (
+    <Component {...props} className={clsx(baseClass, props.className)} />
   )
 
   const c = Component as { displayName?: string; name?: string }

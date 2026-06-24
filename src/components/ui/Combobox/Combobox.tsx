@@ -1,19 +1,19 @@
 import { type SlotProps } from '@/lib/styleUtilities'
-import { Combobox as BaseCombobox } from '@base-ui/react/combobox'
+import type { Combobox as BaseCombobox } from '@base-ui/react/combobox'
 import { Check, ChevronDown, X } from 'lucide-react'
 import * as React from 'react'
 import styles from './Combobox.module.scss'
 import Primitives from './primitives'
 
 interface ComboboxContextValue {
-  itemToStringLabel?: (item: unknown) => string
-  itemToStringValue?: (item: unknown) => string
+  itemToStringLabel?: ((item: unknown) => string) | undefined
+  itemToStringValue?: ((item: unknown) => string) | undefined
 }
 
 const ComboboxContext = React.createContext<ComboboxContextValue>({})
 
-function ComboboxRoot<Value, Multiple extends boolean | undefined = false>(
-  props: BaseCombobox.Root.Props<Value, Multiple>,
+function ComboboxRoot<TValue, TMultiple extends boolean | undefined = false>(
+  props: BaseCombobox.Root.Props<TValue, TMultiple>,
 ) {
   return (
     <ComboboxContext.Provider
@@ -56,11 +56,11 @@ function ComboboxInput({
       <Primitives.Input id={inputId} placeholder={placeholder} {...inputProps} />
       <div className={styles.actionButtons}>
         {clearable && (
-          <Primitives.Clear keepMounted aria-label='Clear selection' {...clearProps}>
+          <Primitives.Clear keepMounted aria-label="Clear selection" {...clearProps}>
             <X size={14} aria-hidden />
           </Primitives.Clear>
         )}
-        <Primitives.Trigger aria-label='Open list' {...triggerProps}>
+        <Primitives.Trigger aria-label="Open list" {...triggerProps}>
           <ChevronDown size={16} aria-hidden />
         </Primitives.Trigger>
       </div>
@@ -132,7 +132,7 @@ function ComboboxMultiInput<T = unknown>({
         <Primitives.Input id={inputId} placeholder={placeholder} {...inputProps} />
       </Primitives.Chips>
       <div className={styles.actionButtons}>
-        <Primitives.Trigger aria-label='Open list' {...triggerProps}>
+        <Primitives.Trigger aria-label="Open list" {...triggerProps}>
           <ChevronDown size={16} aria-hidden />
         </Primitives.Trigger>
       </div>

@@ -1,10 +1,15 @@
 import { Button } from '@/components/ui/Button/Button'
 import { Checkbox } from '@/components/ui/Checkbox/Checkbox'
+import {
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxRoot,
+} from '@/components/ui/Combobox/Combobox'
 import type { DateRangeValue } from '@/components/ui/DatePicker/DatePicker'
 import DatePicker from '@/components/ui/DatePicker/DatePicker'
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
-import { SelectItem, SelectList, SelectRoot, SelectTrigger } from '@/components/ui/Select/Select'
 import { Spinner } from '@/components/ui/Spinner/Spinner'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import type { AlternativeOption, FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
@@ -196,39 +201,42 @@ function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
 }
 
 // Alternative dropdown — populated from the alternatives API via context.
+// Uses a Combobox so the user can type to filter the (potentially ~100) options.
 function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   const { options, isLoading } = useContext(AlternativesContext)
   const current = (value as string | undefined) ?? ''
 
   // Each option is shown as "value — description" so the user sees both.
   const formatOption = (option: AlternativeOption) => `${option.value} — ${option.description}`
-  const items = options.map((option) => ({ value: option.value, label: formatOption(option) }))
+  // The currently selected option object (or null when nothing is chosen).
+  const selectedOption = options.find((option) => option.value === current) ?? null
 
   return (
-    <SelectRoot
-      items={items}
-      value={current === '' ? null : current}
-      onValueChange={(next: string | null) => {
-        onChange(next ?? '')
+    <ComboboxRoot<AlternativeOption>
+      items={options}
+      value={selectedOption}
+      onValueChange={(next: AlternativeOption | null) => {
+        // Store only the option's value (e.g. "04") as the form field value.
+        onChange(next?.value ?? '')
         onBlur()
       }}
+      itemToStringLabel={(option: AlternativeOption) => formatOption(option)}
+      itemToStringValue={(option: AlternativeOption) => option.value}
+      disabled={isLoading}
     >
-      <SelectTrigger
+      <ComboboxInput
         size="md"
-        disabled={isLoading}
-        style={{ width: '100%' }}
         placeholder={isLoading ? 'טוען…' : 'בחר חלופה'}
-      >
-        {(item: string) => items.find((option) => option.value === item)?.label ?? item}
-      </SelectTrigger>
-      <SelectList>
-        {items.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectList>
-    </SelectRoot>
+        inputProps={{ onBlur: () => onBlur() }}
+      />
+      <ComboboxList<AlternativeOption> emptyMessage="לא נמצאו חלופות">
+        {(option: AlternativeOption) => (
+          <ComboboxItem key={option.value} value={option}>
+            {formatOption(option)}
+          </ComboboxItem>
+        )}
+      </ComboboxList>
+    </ComboboxRoot>
   )
 }
 
