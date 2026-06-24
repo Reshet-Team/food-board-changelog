@@ -4,12 +4,12 @@ import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 // Served when no SAP backend is configured. Alternatives 3 & 5 are "monthly"
 // (no consumption date); 4 & 6 are "daily" and require a consumption date.
 const MOCK_ALTERNATIVES: AlternativeOption[] = [
-  { value: '01', label: '01 — חלופה רגילה' },
-  { value: '02', label: '02 — חלופה רגילה' },
-  { value: '03', label: '03 — חודשית' },
-  { value: '04', label: '04 — יומית' },
-  { value: '05', label: '05 — חודשית' },
-  { value: '06', label: '06 — יומית' },
+  { value: '01', description: 'חלופה רגילה' },
+  { value: '02', description: 'חלופה רגילה' },
+  { value: '03', description: 'חודשית' },
+  { value: '04', description: 'יומית' },
+  { value: '05', description: 'חודשית' },
+  { value: '06', description: 'יומית' },
 ]
 
 // Fetches the global list of alternative options for the search dropdown.
@@ -20,7 +20,9 @@ export async function fetchAlternatives(): Promise<AlternativeOption[]> {
     return MOCK_ALTERNATIVES
   }
 
-  const url = new URL('/api/alternatives', import.meta.env.VITE_SAP_API_BASE_URL)
+  // Runs once when the screen opens: GET <base URL>/alternative.
+  const baseUrl = import.meta.env.VITE_SAP_API_BASE_URL.replace(/\/+$/, '')
+  const url = new URL(`${baseUrl}/alternative`)
 
   // Basic Auth — credentials loaded from env vars, never hardcoded
   const credentials = btoa(

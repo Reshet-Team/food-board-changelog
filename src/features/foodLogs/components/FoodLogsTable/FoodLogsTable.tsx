@@ -40,13 +40,13 @@ const LOADING_ROWS = 12
 // ─── Excel export ────────────────────────────────────────────────────────────
 // Column labels for the exported sheet, kept in step with the table below.
 const EXCEL_HEADERS = [
+  'תאריך שינוי',
+  'שעת שינוי',
   'סוג שינוי',
   'חומר',
   'כמות',
   'תאריך צריכה',
   'יום בתקופה',
-  'תאריך שינוי',
-  'שעת שינוי',
   'שונה ע"י',
   'שדה',
   'ערך ישן',
@@ -91,13 +91,13 @@ const globalFilterFn: FilterFn<FoodLog> = (row, _columnId, filterValue: string) 
 /** Builds a real .xlsx workbook from the current rows and downloads it. */
 function exportExcel(rows: FoodLog[]): void {
   const body = rows.map((row) => [
+    formatSapDate(row.changeDate),
+    formatSapTime(row.changeTime),
     changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
     formatSapDate(row.consumptionDate),
-    row.dayInPeriod,
-    formatSapDate(row.changeDate),
-    formatSapTime(row.changeTime),
+    row.dayInPeriod ?? '',
     row.changedBy,
     row.field,
     row.oldValue,
@@ -154,10 +154,11 @@ function useClip(value: string) {
 }
 
 // ─── Text cell ───────────────────────────────────────────────────────────────
-// Renders a single value, clipped or wrapped. The Reshet tooltip is always
-// mounted so the measured span never remounts; it only opens
-// (`disabled={!isClipped}`) when the value actually overflows, showing the full
-// text on hover.
+// Renders a single value. A value with no spaces (e.g. a long number) stays on
+// one line and truncates with an ellipsis — the full text shows in the tooltip
+// on hover; a value with spaces wraps onto new lines between words. The Reshet
+// tooltip is always mounted so the measured span never remounts; it only opens
+// (`disabled={!isClipped}`) when the value actually overflows.
 function TextCell({ value, className }: { value: string; className?: string | undefined }) {
   const { ref, isClipped, isSingleToken } = useClip(value)
   return (
@@ -179,49 +180,18 @@ function TextCell({ value, className }: { value: string; className?: string | un
 }
 
 // ─── Value change ────────────────────────────────────────────────────────────
-// Shows the change inline: the old value (red) with an arrow pointing to the
-// new value (green). In RTL the arrow points to the inline-end (left), so the
-// flow reads old → new.
-//
-// Tooltip behaviour: a single Reshet tooltip spans the whole cell and shows
-// both full values together. It is always mounted (so the measured spans never
-// remount) and only opens (`disabled={!anyClipped}`) when either value
-// overflows, no matter where inside the cell the user hovers.
+// Shows an update as the old value (red) and new value (green) with an arrow
+// between them. They sit side by side on one line while they fit, and only wrap
+// onto a new line when the pair is too wide for the column. Each value reuses
+// `TextCell`, so a long number truncates (with a hover tooltip) while free text
+// wraps.
 function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: string }) {
-  const { ref: oldRef, isClipped: oldClipped, isSingleToken: oldSingle } = useClip(oldValue)
-  const { ref: newRef, isClipped: newClipped, isSingleToken: newSingle } = useClip(newValue)
-  const anyClipped = oldClipped || newClipped
-
   return (
-    <TooltipRoot>
-      <TooltipTrigger
-        disabled={!anyClipped}
-        render={
-          <span className={styles.valueChange}>
-            <span
-              ref={oldRef}
-              className={clsx(oldSingle ? styles.truncate : styles.wrap, styles.oldValue)}
-            >
-              {oldValue}
-            </span>
-            <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
-            <span
-              ref={newRef}
-              className={clsx(newSingle ? styles.truncate : styles.wrap, styles.newValue)}
-            >
-              {newValue}
-            </span>
-          </span>
-        }
-      />
-      <TooltipContent>
-        <span className={styles.tooltipPair}>
-          <span className={styles.oldValue}>{oldValue}</span>
-          <ArrowLeft size="0.85rem" aria-hidden />
-          <span className={styles.newValue}>{newValue}</span>
-        </span>
-      </TooltipContent>
-    </TooltipRoot>
+    <span className={styles.valueChange}>
+      <TextCell value={oldValue} className={styles.oldValue} />
+      <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
+      <TextCell value={newValue} className={styles.newValue} />
+    </span>
   )
 }
 
@@ -229,6 +199,16 @@ function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: strin
 // All data columns are sortable (TanStack Table's default). Date/time columns
 // store the raw SAP wire value (so sorting stays correct) and format on display.
 const columns: ColumnDef<FoodLog>[] = [
+  {
+    accessorKey: 'changeDate',
+    header: 'תאריך שינוי',
+    cell: ({ getValue }) => formatSapDate(getValue<string>()),
+  },
+  {
+    accessorKey: 'changeTime',
+    header: 'שעת שינוי',
+    cell: ({ getValue }) => formatSapTime(getValue<string>()),
+  },
   {
     accessorKey: 'typeOfChange',
     header: 'סוג שינוי',
@@ -247,22 +227,15 @@ const columns: ColumnDef<FoodLog>[] = [
   {
     accessorKey: 'consumptionDate',
     header: 'תאריך צריכה',
-    cell: ({ getValue }) => formatSapDate(getValue<string>()),
+    cell: ({ getValue }) => formatSapDate(getValue<string | undefined>()),
   },
   {
     accessorKey: 'dayInPeriod',
     header: 'יום בתקופה',
-    cell: ({ getValue }) => <TextCell value={String(getValue<number>())} />,
-  },
-  {
-    accessorKey: 'changeDate',
-    header: 'תאריך שינוי',
-    cell: ({ getValue }) => formatSapDate(getValue<string>()),
-  },
-  {
-    accessorKey: 'changeTime',
-    header: 'שעת שינוי',
-    cell: ({ getValue }) => formatSapTime(getValue<string>()),
+    cell: ({ getValue }) => {
+      const value = getValue<number | undefined>()
+      return <TextCell value={value == null ? '' : String(value)} />
+    },
   },
   {
     accessorKey: 'changedBy',
@@ -300,7 +273,7 @@ export interface FoodLogsTableProps {
   /** Whether a search has been submitted (mandatory fields filled). */
   hasSearched: boolean
   onRetry: () => void
-  /** Rendered in the toolbar, to the left of the Excel export. */
+  /** Rendered in the toolbar, between the search box and the Excel export. */
   filtersSlot?: ReactNode
 }
 
@@ -409,11 +382,11 @@ export function FoodLogsTable({
               }
               startSlot={<Search size="1rem" aria-hidden />}
             />
+            {filtersSlot}
             <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
               <FileSpreadsheet size="1rem" aria-hidden />
               ייצוא לאקסל
             </Button>
-            {filtersSlot}
           </div>
           <span className={styles.count}>
             מציג <strong>{visibleRows.length}</strong> שינויים

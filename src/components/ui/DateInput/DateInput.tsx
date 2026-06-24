@@ -51,6 +51,9 @@ function Segment({ segment, state }: { segment: DateSegment; state: DateFieldSta
     segmentProps.onBlur?.(e as React.FocusEvent<HTMLDivElement>)
   }
 
+  // Show "." between segments instead of the locale's default "/".
+  const displayText = segment.type === 'literal' ? segment.text.replace('/', '.') : segment.text
+
   return (
     <span
       {...segmentProps}
@@ -62,7 +65,7 @@ function Segment({ segment, state }: { segment: DateSegment; state: DateFieldSta
       onFocus={handleFocus}
       onBlur={handleBlur}
     >
-      {isYear && yearBuffer ? yearBuffer : segment.text}
+      {isYear && yearBuffer ? yearBuffer : displayText}
     </span>
   )
 }

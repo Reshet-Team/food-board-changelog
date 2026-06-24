@@ -10,7 +10,9 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
     return filterMockFoodLogs(filter)
   }
 
-  const url = new URL('/api/food-logs', import.meta.env.VITE_SAP_API_BASE_URL)
+  // Runs when the user presses search: GET <base URL>/food-logs.
+  const baseUrl = import.meta.env.VITE_SAP_API_BASE_URL.replace(/\/+$/, '')
+  const url = new URL(`${baseUrl}/food-logs`)
 
   // Scalar string fields appended as-is; Date fields converted to SAP YYYYMMDD
   // format; array fields (material, changedBy) sent to SAP as a single

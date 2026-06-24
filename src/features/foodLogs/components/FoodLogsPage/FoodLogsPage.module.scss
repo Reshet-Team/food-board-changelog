@@ -25,6 +25,12 @@
     color: var(--color-fg);
   }
 
+  .appLogo {
+    width: auto;
+    height: 2.5rem;
+    object-fit: contain;
+  }
+
   // ─── Body: table (start/right) + filter sidebar (end/left) ──────────────────
   .body {
     flex: 1;

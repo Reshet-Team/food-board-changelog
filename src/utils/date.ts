@@ -15,20 +15,20 @@ export function toSapDate(date: Date): string {
   return `${year}${month}${day}`
 }
 
-/** Formats a SAP DATUM string (YYYYMMDD) for display: "20260616" → "16/06/2026" */
-export function formatSapDate(value: string): string {
+/** Formats a SAP DATUM string (YYYYMMDD) for display: "20260616" → "16.06.2026" */
+export function formatSapDate(value: string | undefined): string {
+  if (value == null) return ''
   if (!/^\d{8}$/.test(value)) return value
   const year = value.slice(0, 4)
   const month = value.slice(4, 6)
   const day = value.slice(6, 8)
-  return `${day}/${month}/${year}`
+  return `${day}.${month}.${year}`
 }
 
-/** Formats a SAP UZEIT string (HHMMSS) for display: "143000" → "14:30:00" */
+/** Formats a SAP UZEIT string (HHMMSS) for display without seconds: "143000" → "14:30" */
 export function formatSapTime(value: string): string {
   if (!/^\d{6}$/.test(value)) return value
   const hours = value.slice(0, 2)
   const minutes = value.slice(2, 4)
-  const seconds = value.slice(4, 6)
-  return `${hours}:${minutes}:${seconds}`
+  return `${hours}:${minutes}`
 }

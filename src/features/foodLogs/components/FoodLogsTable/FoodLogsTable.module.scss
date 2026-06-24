@@ -200,23 +200,25 @@
   }
 
   // ─── Value change (old → new) ───────────────────────────────────────────────
+  // Old and new values sit side by side with an arrow between them, wrapping
+  // onto a new line only when the pair is too wide for the column.
   .valueChange {
     display: flex;
-    flex-wrap: nowrap;
-    max-width: 100%;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    max-width: 100%;
     gap: var(--space-1);
     min-width: 0;
     font-size: var(--font-size-sm);
+    text-align: center;
   }
 
-  // Let each value shrink and truncate (via `.truncate`) when the pair is too
-  // wide for the column, instead of pushing the layout or wrapping.
+  // Each value reuses the cell truncate/wrap rules, so a long number ellipsizes
+  // while free text wraps.
   .oldValue,
   .newValue {
     min-width: 0;
-    flex: 0 1 auto;
   }
 
   .oldValue {
@@ -231,14 +233,7 @@
 
   .valueArrow {
     flex-shrink: 0;
-    color: var(--color-fg-subtle);
-  }
-
-  // Combined tooltip shown when BOTH the old and new values are clipped.
-  .tooltipPair {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
+    align-self: center;
     color: var(--color-fg-subtle);
   }
 }

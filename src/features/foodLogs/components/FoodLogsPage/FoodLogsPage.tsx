@@ -80,6 +80,7 @@ export function FoodLogsPage() {
   return (
     <div className={styles.page}>
       <header className={styles.appHeader}>
+        <img className={styles.appLogo} src="/logo.png" alt="" aria-hidden />
         <h1 className={styles.appTitle}>יומן שינויים בלוחות מזון</h1>
       </header>
 

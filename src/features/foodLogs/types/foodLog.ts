@@ -19,29 +19,29 @@ export interface FoodLogsFilter {
 }
 
 // ─── Alternative option (dropdown choice) ────────────────────────────────────
-// One selectable alternative (ALTNR) returned by the alternatives API.
+// One selectable alternative returned by the alternatives API as a value +
+// description pair; the dropdown shows both.
 
 export interface AlternativeOption {
   value: string // ALTNR — Alternative number (e.g. "04")
-  label: string // Human-readable description shown in the dropdown
+  description: string // Human-readable description shown next to the value
 }
 
 // ─── Food Log Record (one table row) ────────────────────────────────────────
 // Represents a single change-log entry returned by SAP.
 
 export interface FoodLog {
-  alternative?: string // ALTNR     — Alternative number (CHAR2, zero-padded)
-  typeOfChange: string // DDTEXT    — Description of the change type
+  typeOfChange: string // CHANGE_IND — Change-document indicator code (I/J/U/D/E)
   material: string // MATNR     — Material number (CHAR18, zero-padded)
   quantity: number // KMPMG     — Component quantity
-  consumptionDate: string // DATUM     — Consumption date (YYYYMMDD)
-  dayInPeriod: number // CIM_COUNT — Day counter within the period
+  consumptionDate?: string // DATUM     — Consumption date (YYYYMMDD). Optional — may be absent.
+  dayInPeriod?: number // CIM_COUNT — Day counter within the period. Optional — may be absent.
   changeDate: string // DATUM     — Date of change (YYYYMMDD)
   changeTime: string // UZEIT     — Time of change (HHMMSS)
   changedBy: string // USNAM     — Username who made the change
   field: string // FIELDNAME — Name of the changed field
   oldValue: string // CDFLDVALO — Value before the change
-  newValue: string // CDFLDVALO — Value after the change
+  newValue: string // CDFLDVALN — Value after the change
 }
 
 // ─── Search Params Schema (URL state + form validation) ──────────────────────

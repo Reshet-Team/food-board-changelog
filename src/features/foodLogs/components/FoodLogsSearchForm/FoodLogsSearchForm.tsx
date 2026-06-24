@@ -40,12 +40,17 @@ interface FormActionsContextValue {
   isDisabled: boolean
   isLoading: boolean
   onReset: () => void
+  // Local change-type filter, rendered just above the apply button.
+  changeTypes: ChangeType[]
+  onChangeTypesChange: (value: ChangeType[]) => void
 }
 
 const FormActionsContext = createContext<FormActionsContextValue>({
   isDisabled: true,
   isLoading: false,
   onReset: () => {},
+  changeTypes: [],
+  onChangeTypesChange: () => {},
 })
 
 // ─── Context for passing the range picker values into the date fields ─────────
@@ -85,18 +90,49 @@ const AlternativesContext = createContext<AlternativesContextValue>({
   isLoading: false,
 })
 
-// ─── Submit button — full-width "apply filters" action at the panel's foot ─────
+// ─── Submit button — change-type filter + full-width "apply filters" action ───
+// Rendered as the form's submit slot so the change-type checkboxes sit inside
+// the same filters block as the other fields, right above the apply button.
 function FormActionsButtons({ isSubmitting }: SubmitButtonProps) {
-  const { isDisabled, isLoading } = useContext(FormActionsContext)
+  const { isDisabled, isLoading, changeTypes, onChangeTypesChange } = useContext(FormActionsContext)
   const isBusy = isSubmitting || isLoading
 
   return (
-    <div className={styles.actions}>
-      <Button type="submit" className={styles.applyButton} disabled={isBusy || isDisabled}>
-        {isBusy && <Spinner size="sm" color="inline" />}
-        החלת מסננים
-      </Button>
-    </div>
+    <>
+      <div className={styles.changeTypeFilter}>
+        <span className={styles.changeTypeLabel}>סוג שינוי</span>
+        <div className={styles.checkboxGroup}>
+          {CHANGE_TYPE_OPTIONS.map((option) => {
+            const checked = changeTypes.includes(option.value)
+            // Keep at least one category selected: the last remaining checkbox
+            // can't be unticked.
+            const isLastChecked = checked && changeTypes.length === 1
+            return (
+              <Checkbox
+                key={option.value}
+                size="sm"
+                label={option.label}
+                checked={checked}
+                disabled={isLastChecked}
+                onCheckedChange={(next) => {
+                  if (next) {
+                    onChangeTypesChange([...changeTypes, option.value])
+                  } else if (changeTypes.length > 1) {
+                    onChangeTypesChange(changeTypes.filter((t) => t !== option.value))
+                  }
+                }}
+              />
+            )
+          })}
+        </div>
+      </div>
+      <div className={styles.actions}>
+        <Button type="submit" className={styles.applyButton} disabled={isBusy || isDisabled}>
+          {isBusy && <Spinner size="sm" color="inline" />}
+          החלת מסננים
+        </Button>
+      </div>
+    </>
   )
 }
 
@@ -164,9 +200,13 @@ function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   const { options, isLoading } = useContext(AlternativesContext)
   const current = (value as string | undefined) ?? ''
 
+  // Each option is shown as "value — description" so the user sees both.
+  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.description}`
+  const items = options.map((option) => ({ value: option.value, label: formatOption(option) }))
+
   return (
     <SelectRoot
-      items={options}
+      items={items}
       value={current === '' ? null : current}
       onValueChange={(next: string | null) => {
         onChange(next ?? '')
@@ -179,10 +219,10 @@ function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
         style={{ width: '100%' }}
         placeholder={isLoading ? 'טוען…' : 'בחר חלופה'}
       >
-        {(item: string) => options.find((option) => option.value === item)?.label ?? item}
+        {(item: string) => items.find((option) => option.value === item)?.label ?? item}
       </SelectTrigger>
       <SelectList>
-        {options.map((option) => (
+        {items.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>
@@ -457,6 +497,8 @@ export function FoodLogsSearchForm({
       (consumptionEnabled && !consumptionRange),
     isLoading,
     onReset: handleReset,
+    changeTypes,
+    onChangeTypesChange,
   }
 
   const dateRangeContextValue: DateRangeContextValue = {
@@ -523,33 +565,6 @@ export function FoodLogsSearchForm({
                 }
               }}
             />
-            <div className={styles.changeTypeFilter}>
-              <span className={styles.changeTypeLabel}>סוג שינוי</span>
-              <div className={styles.checkboxGroup}>
-                {CHANGE_TYPE_OPTIONS.map((option) => {
-                  const checked = changeTypes.includes(option.value)
-                  // Keep at least one category selected: the last remaining
-                  // checkbox can't be unticked.
-                  const isLastChecked = checked && changeTypes.length === 1
-                  return (
-                    <Checkbox
-                      key={option.value}
-                      size="sm"
-                      label={option.label}
-                      checked={checked}
-                      disabled={isLastChecked}
-                      onCheckedChange={(next) => {
-                        if (next) {
-                          onChangeTypesChange([...changeTypes, option.value])
-                        } else if (changeTypes.length > 1) {
-                          onChangeTypesChange(changeTypes.filter((t) => t !== option.value))
-                        }
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            </div>
           </div>
         </AlternativesContext.Provider>
       </DateRangeContext.Provider>

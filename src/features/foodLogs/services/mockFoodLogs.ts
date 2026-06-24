@@ -59,9 +59,9 @@ function valuesForField(field: string, index: number): { oldValue: string; newVa
   }
 }
 
-// Builds a single mock row for the given index and alternative. The index seeds
-// all the varied fields (dates, materials, users…) so each row looks distinct.
-function buildFoodLog(index: number, alternative: string): FoodLog {
+// Builds a single mock row for the given index. The index seeds all the varied
+// fields (dates, materials, users…) so each row looks distinct.
+function buildFoodLog(index: number): FoodLog {
   const dayOffset = -index
   const field = FIELDS[index % FIELDS.length]!
   const typeOfChange = TYPES_OF_CHANGE[index % TYPES_OF_CHANGE.length]!
@@ -71,35 +71,48 @@ function buildFoodLog(index: number, alternative: string): FoodLog {
   // insert just the new value, and an update carries both.
   const oldValue = category === 'add' ? '' : values.oldValue
   const newValue = category === 'delete' ? '' : values.newValue
+  // consumptionDate and dayInPeriod are optional in real data — leave them off
+  // every 4th row so the table is exercised with missing values.
+  const hasPeriodInfo = index % 4 !== 0
   return {
-    alternative,
     typeOfChange,
     material: padMaterial(1234 + index),
     quantity: Number(((index + 1) * 2.5).toFixed(2)),
-    consumptionDate: sapDate(dayOffset - 1),
-    dayInPeriod: (index % 30) + 1,
     changeDate: sapDate(dayOffset),
     changeTime: sapTime(index % 24, (index * 7) % 60, (index * 13) % 60),
     changedBy: USERS[index % USERS.length]!,
     field,
     oldValue,
     newValue,
+    ...(hasPeriodInfo && {
+      consumptionDate: sapDate(dayOffset - 1),
+      dayInPeriod: (index % 30) + 1,
+    }),
   }
+}
+
+// Mock-only wrapper: the real food-log GET doesn't return an alternative (it's a
+// server-side filter), but the mock tags each row so it can mimic that filter.
+interface MockRow {
+  alternative: string
+  log: FoodLog
 }
 
 // Base spread across alternatives 01–06 so each dropdown option returns its own
 // subset of rows (matches the alternatives API values).
-const BASE_FOOD_LOGS: FoodLog[] = Array.from({ length: 24 }, (_, index) =>
-  buildFoodLog(index, String((index % 6) + 1).padStart(2, '0')),
-)
+const BASE_FOOD_LOGS: MockRow[] = Array.from({ length: 24 }, (_, index) => ({
+  alternative: String((index % 6) + 1).padStart(2, '0'),
+  log: buildFoodLog(index),
+}))
 
 // Alternative "01" is the primary demo target, so top it up to 15 rows total.
 const alt01Count = BASE_FOOD_LOGS.filter((row) => row.alternative === '01').length
-const ALTERNATIVE_01_EXTRA: FoodLog[] = Array.from({ length: 15 - alt01Count }, (_, i) =>
-  buildFoodLog(24 + i, '01'),
-)
+const ALTERNATIVE_01_EXTRA: MockRow[] = Array.from({ length: 15 - alt01Count }, (_, i) => ({
+  alternative: '01',
+  log: buildFoodLog(24 + i),
+}))
 
-export const MOCK_FOOD_LOGS: FoodLog[] = [...BASE_FOOD_LOGS, ...ALTERNATIVE_01_EXTRA]
+const MOCK_FOOD_LOGS: MockRow[] = [...BASE_FOOD_LOGS, ...ALTERNATIVE_01_EXTRA]
 
 // Filters the in-memory mock dataset by the search criteria, mimicking SAP's
 // server-side filtering so the screen behaves like the real search while
@@ -114,27 +127,30 @@ export function filterMockFoodLogs(filter: FoodLogsFilter): FoodLog[] {
 
   return MOCK_FOOD_LOGS.filter((row) => {
     // Alternative: the mandatory ALTNR filter — keep only rows of that alternative.
-    if (row.alternative && row.alternative !== filter.alternative) return false
+    if (row.alternative !== filter.alternative) return false
+
+    const log = row.log
 
     // Material: match if the row's (zero-padded) material equals any entered
     // value, compared numerically so "1234" matches "000000000000001234".
     if (filter.material?.length) {
-      const matches = filter.material.some((value) => Number(value) === Number(row.material))
+      const matches = filter.material.some((value) => Number(value) === Number(log.material))
       if (!matches) return false
     }
 
     // Changed by: match if the row's user equals any entered value (case-insensitive).
     if (filter.changedBy?.length) {
       const matches = filter.changedBy.some(
-        (value) => value.toLowerCase() === row.changedBy.toLowerCase(),
+        (value) => value.toLowerCase() === log.changedBy.toLowerCase(),
       )
       if (!matches) return false
     }
 
-    // Consumption date: keep rows whose date falls within the range.
-    if (from && row.consumptionDate < from) return false
-    if (to && row.consumptionDate > to) return false
+    // Consumption date: keep rows whose date falls within the range. Rows with
+    // no consumption date are excluded once a consumption-date filter is set.
+    if (from && (log.consumptionDate == null || log.consumptionDate < from)) return false
+    if (to && (log.consumptionDate == null || log.consumptionDate > to)) return false
 
     return true
-  })
+  }).map((row) => row.log)
 }
