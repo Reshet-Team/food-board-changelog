@@ -7,15 +7,15 @@ import {
 import DatePicker from '@/components/ui/DatePicker/DatePicker'
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
-import {
-  AlternativesContext,
-  DateRangeContext,
-} from '@/features/foodLogs/components/FoodLogsSearchForm/searchFormContext'
+import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 import type { FieldProps, FieldWrapperProps } from '@uniform-ts/core'
+import { useAutoFormContext } from '@uniform-ts/core'
 import clsx from 'clsx'
 import { X } from 'lucide-react'
-import { useContext, useState } from 'react'
+import { useState } from 'react'
+import { isDailyAlternative } from './dailyAlternative'
+import { validateDateRange } from './dateRange'
 import styles from './FoodLogsSearchForm.module.scss'
 
 // ─── Required field names (for showing the * indicator) ──────────────────────
@@ -23,15 +23,31 @@ const REQUIRED_FIELDS = new Set(['foodBoard', 'alternative', 'dateFrom'])
 
 // ─── Custom field wrapper — adds label with required indicator ────────────────
 export function FormFieldWrapper({ children, field, error }: FieldWrapperProps) {
-  const { rangeError, consumptionEnabled, consumptionError } = useContext(DateRangeContext)
+  // Read the shared form state straight from UniForm instead of a manual context.
+  const { formMethods } = useAutoFormContext()
+  const { data: alternatives } = useAlternatives()
+
+  const alternative = (formMethods.watch('alternative') as string | undefined) ?? ''
+  // "Daily" alternatives require a consumption date; others can't have one.
+  const consumptionEnabled = isDailyAlternative(alternative, alternatives ?? [])
+
   // consumptionDateFrom is required only when the chosen alternative needs one.
   const isRequired =
     REQUIRED_FIELDS.has(field.name) || (field.name === 'consumptionDateFrom' && consumptionEnabled)
   const label = field.meta.label ?? field.label
+
   // For the date fields, show the live range/consumption error over any form error.
   let displayError = error
-  if (field.name === 'dateFrom') displayError = rangeError ?? error
-  if (field.name === 'consumptionDateFrom') displayError = consumptionError ?? error
+  if (field.name === 'dateFrom') {
+    const dateFrom = formMethods.watch('dateFrom') as Date | undefined
+    const dateTo = formMethods.watch('dateTo') as Date | undefined
+    displayError = validateDateRange(dateFrom, dateTo) ?? error
+  }
+  if (field.name === 'consumptionDateFrom') {
+    const consumptionFrom = formMethods.watch('consumptionDateFrom') as Date | undefined
+    displayError =
+      (consumptionEnabled && !consumptionFrom ? 'יש לבחור טווח תאריכי צריכה' : null) ?? error
+  }
   return (
     <FieldRoot>
       {isRequired ? (
@@ -80,10 +96,11 @@ export function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
   )
 }
 
-// Alternative dropdown — populated from the alternatives API via context.
+// Alternative dropdown — populated directly from the alternatives API.
 // Uses a Combobox so the user can type to filter the (potentially ~100) options.
 export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
-  const { options, isLoading } = useContext(AlternativesContext)
+  const { data: alternatives, isLoading } = useAlternatives()
+  const options = alternatives ?? []
   const current = (value as string | undefined) ?? ''
 
   // Each option is shown as "value — type description" so the user sees both.
@@ -121,19 +138,22 @@ export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
 }
 
 // Range date picker — renders as the dateFrom field but controls both dates.
-// It reads/writes the shared range state via DateRangeContext.
-export function DateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
-  const { rangePickerValue, onRangeChange } = useContext(DateRangeContext)
+// `dateFrom` is its own field value; `dateTo` is read/written via the form.
+export function DateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
+  const { formMethods } = useAutoFormContext()
+  const start = (value as Date | undefined) ?? null
+  const end = (formMethods.watch('dateTo') as Date | undefined) ?? null
+  const range = start && end ? { start, end } : null
 
   return (
     <div className={styles.dateFieldWrapper}>
       <DatePicker
         mode="range"
-        value={rangePickerValue}
-        onChange={(range) => {
-          onRangeChange(range)
-          onChange(range?.start ?? null)
-          if (range) onBlur()
+        value={range}
+        onChange={(next) => {
+          onChange(next?.start ?? null)
+          formMethods.setValue('dateTo', next?.end ?? null)
+          if (next) onBlur()
         }}
       />
     </div>
@@ -141,10 +161,17 @@ export function DateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
 }
 
 // Consumption-date range picker. Greyed out and non-interactive (via `inert`)
-// when the chosen alternative doesn't support a consumption date.
-export function ConsumptionDateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
-  const { consumptionRange, onConsumptionRangeChange, consumptionEnabled } =
-    useContext(DateRangeContext)
+// when the chosen alternative doesn't support a consumption date. Like the
+// change-date picker it controls a pair of form fields.
+export function ConsumptionDateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
+  const { formMethods } = useAutoFormContext()
+  const { data: alternatives } = useAlternatives()
+  const alternative = (formMethods.watch('alternative') as string | undefined) ?? ''
+  const consumptionEnabled = isDailyAlternative(alternative, alternatives ?? [])
+
+  const start = (value as Date | undefined) ?? null
+  const end = (formMethods.watch('consumptionDateTo') as Date | undefined) ?? null
+  const range = start && end ? { start, end } : null
 
   return (
     <div
@@ -153,10 +180,10 @@ export function ConsumptionDateRangeFieldPicker({ onChange, onBlur }: FieldProps
     >
       <DatePicker
         mode="range"
-        value={consumptionRange}
-        onChange={(range) => {
-          onConsumptionRangeChange(range)
-          onChange(range?.start ?? undefined)
+        value={range}
+        onChange={(next) => {
+          onChange(next?.start ?? undefined)
+          formMethods.setValue('consumptionDateTo', next?.end ?? undefined)
           onBlur()
         }}
       />

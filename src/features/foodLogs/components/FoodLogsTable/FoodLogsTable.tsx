@@ -14,16 +14,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/Empty/Empty'
-import { Input } from '@/components/ui/Input/Input'
-import { exportExcel } from '@/features/foodLogs/components/FoodLogsTable/exportExcel'
+import { FoodLogsTableToolbar } from '@/features/foodLogs/components/FoodLogsTable/FoodLogsTableToolbar'
 import { columns } from '@/features/foodLogs/components/FoodLogsTable/tableColumns'
-import {
-  globalFilterFn,
-  matchesQuery,
-} from '@/features/foodLogs/components/FoodLogsTable/tableSearch'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
-import { FileSearch, FileSpreadsheet, RotateCw, Search, TriangleAlert } from 'lucide-react'
-import { useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
+import { FileSearch, RotateCw, TriangleAlert } from 'lucide-react'
+import { useMemo, type ReactNode } from 'react'
 import styles from './FoodLogsTable.module.scss'
 
 // Number of skeleton rows to show while a fetch is in flight.
@@ -49,16 +44,6 @@ export function FoodLogsTable({
   filtersSlot,
 }: FoodLogsTableProps) {
   const rows = useMemo(() => data ?? [], [data])
-
-  // Free-text search across every column. Kept in component state and fed to the
-  // table as a controlled global filter, so the row count and Excel export below
-  // reflect exactly what the user sees after filtering.
-  const [globalFilter, setGlobalFilter] = useState('')
-  const trimmedQuery = globalFilter.trim().toLowerCase()
-  const visibleRows = useMemo(
-    () => (trimmedQuery ? rows.filter((row) => matchesQuery(row, trimmedQuery)) : rows),
-    [rows, trimmedQuery],
-  )
 
   // ─── Idle — no search submitted yet ────────────────────────────────────────
   if (!hasSearched) {
@@ -118,41 +103,15 @@ export function FoodLogsTable({
   // ─── Loading / Success ─────────────────────────────────────────────────────
   return (
     <div className={styles.tableArea}>
-      {rows.length > 0 && (
-        <div className={styles.tableToolbar}>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Input
-              size="sm"
-              className={styles.searchInput}
-              placeholder="חיפוש בכל השדות…"
-              aria-label="חיפוש בטבלה"
-              value={globalFilter}
-              onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                setGlobalFilter(event.currentTarget.value)
-              }
-              startSlot={<Search size="1rem" aria-hidden />}
-            />
-            {filtersSlot}
-            <Button variant="secondary" size="sm" onClick={() => exportExcel(visibleRows)}>
-              <FileSpreadsheet size="1rem" aria-hidden />
-              ייצוא לאקסל
-            </Button>
-          </div>
-          <span className={styles.count}>
-            מציג <strong>{visibleRows.length}</strong> שינויים
-          </span>
-        </div>
-      )}
       <DataTableRoot
         columns={columns}
         data={rows}
         isLoading={isLoading}
         loadingRowsCount={LOADING_ROWS}
         className={styles.tableWrapper!}
-        globalFilterFn={globalFilterFn}
-        state={{ globalFilter }}
-        onGlobalFilterChange={setGlobalFilter}
+        globalFilterFn="includesString"
       >
+        <FoodLogsTableToolbar filtersSlot={filtersSlot} />
         <DataTableContent>
           <DataTableHeader />
           <DataTableBody emptyMessage="לא נמצאו תוצאות התואמות את החיפוש" />

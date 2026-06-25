@@ -39,6 +39,12 @@
     border-block-end: 1px solid var(--color-border);
   }
 
+  // Search box + filters slot + Excel export, grouped at the end of the toolbar.
+  .toolbarControls {
+    display: flex;
+    gap: var(--space-4);
+  }
+
   // Row count, shown at the start (right in RTL) of the table toolbar.
   .count {
     font-size: var(--font-size-sm);
@@ -65,8 +71,9 @@
     display: flex;
     flex-direction: column;
 
-    // The outer DataTable container owns both scroll axes…
-    > div {
+    // The outer DataTable container owns both scroll axes (the toolbar above it
+    // keeps its natural height and is excluded here).
+    > div:not(.tableToolbar) {
       flex: 1;
       min-height: 0;
       overflow: auto;
@@ -163,17 +170,17 @@
     white-space: nowrap;
   }
 
-  .badgeAdd {
+  .badge[data-tone='add'] {
     background: color-mix(in srgb, var(--color-success) 18%, var(--color-bg));
     color: var(--color-success-hover);
   }
 
-  .badgeUpdate {
+  .badge[data-tone='update'] {
     background: color-mix(in srgb, var(--color-warning) 12%, var(--color-bg));
     color: color-mix(in srgb, var(--color-warning) 75%, black);
   }
 
-  .badgeDelete {
+  .badge[data-tone='delete'] {
     background: color-mix(in srgb, var(--color-danger) 16%, var(--color-bg));
     color: var(--color-danger);
   }

@@ -1,135 +1,68 @@
 'use no memo' // TanStack Table doesn't support the React Compiler yet
 
-import { TooltipContent, TooltipRoot, TooltipTrigger } from '@/components/ui/Tooltip/Tooltip'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/changeType'
-import { useResizeObserver } from '@/hooks/useResizeObserver'
-import { formatDateShort, formatTimeShort } from '@/utils/date'
+import { formatDateShort, formatTimeShort, toSapDate } from '@/utils/date'
 import type { ColumnDef, SortingFn } from '@tanstack/react-table'
-import clsx from 'clsx'
-import { ArrowLeft } from 'lucide-react'
-import { useRef, useState } from 'react'
 import styles from './FoodLogsTable.module.scss'
+import { ChangeTypeBadge, TextCell, ValueChange } from './TableCells'
 
-// ─── Change-type badge ───────────────────────────────────────────────────────
-// Translates the raw SAP indicator code (U / E / D / I / J) into a Hebrew label
-// and colours the pill by category: add → green, delete → red, update → amber.
-function ChangeTypeBadge({ code }: { code: string }) {
-  const category = classifyChangeType(code)
-  const tone =
-    category === 'add'
-      ? styles.badgeAdd
-      : category === 'delete'
-        ? styles.badgeDelete
-        : styles.badgeUpdate
-  return <span className={clsx(styles.badge, tone)}>{changeTypeLabel(code)}</span>
+// ─── Searchable text ─────────────────────────────────────────────────────────
+// Each column's `accessorFn` returns the string the built-in `includesString`
+// global filter matches against — so search works on exactly what the user
+// sees. Date columns expose both the displayed format ("16.06.2026") and the
+// SAP format ("20260616") so either can be searched. Display still comes from
+// the column's `cell`, and ordering from its `sortingFn`.
+function dateSearchText(date: Date | undefined): string {
+  if (!date) return ''
+  return `${formatDateShort(date)} ${toSapDate(date)}`
 }
 
-// ─── Clip detection ──────────────────────────────────────────────────────────
-// Only a single unbroken token (an 18-digit material number, a username) is
-// clipped with an ellipsis; a value containing a space is allowed to wrap onto
-// the next line instead. This hook watches the rendered width and reports
-// whether a single-token value actually overflows its cell. Column widths are
-// responsive, so it re-measures whenever the cell is resized.
-function useClip(value: string) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const [isClipped, setIsClipped] = useState(false)
+// ─── Sorting ─────────────────────────────────────────────────────────────────
+// Sort functions read the raw `Date`/number off `row.original`, independent of
+// the (string) accessor value used for filtering and display.
+const sortByChangeDate: SortingFn<FoodLog> = (a, b) =>
+  a.original.changeDate.getTime() - b.original.changeDate.getTime()
 
-  const trimmed = value.trim()
-  const isSingleToken = trimmed.length > 0 && !/\s/.test(trimmed)
+// The change-date and change-time columns share one timestamp but behave like
+// two independent fields: the date column sorts by calendar day (above) while
+// the time column sorts by time-of-day only — so 09:00 always comes before
+// 17:00 regardless of which day each change happened on.
+const secondsOfDay = (date: Date): number =>
+  date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()
 
-  // Re-measure on mount, on resize, and whenever the value (and therefore the
-  // single-token check) changes. A multi-token value is allowed to wrap, so it
-  // is never reported as clipped.
-  useResizeObserver(ref, () => {
-    const el = ref.current
-    setIsClipped(!!el && isSingleToken && el.scrollWidth > el.clientWidth)
-  }, [value, isSingleToken])
+const sortByChangeTime: SortingFn<FoodLog> = (a, b) =>
+  secondsOfDay(a.original.changeDate) - secondsOfDay(b.original.changeDate)
 
-  return { ref, isClipped, isSingleToken }
-}
+const sortByConsumptionDate: SortingFn<FoodLog> = (a, b) =>
+  (a.original.consumptionDate?.getTime() ?? 0) - (b.original.consumptionDate?.getTime() ?? 0)
 
-// ─── Text cell ───────────────────────────────────────────────────────────────
-// Renders a single value. A value with no spaces (e.g. a long number) stays on
-// one line and truncates with an ellipsis — the full text shows in the tooltip
-// on hover; a value with spaces wraps onto new lines between words. The Reshet
-// tooltip is always mounted so the measured span never remounts; it only opens
-// (`disabled={!isClipped}`) when the value actually overflows.
-function TextCell({ value, className }: { value: string; className?: string | undefined }) {
-  const { ref, isClipped, isSingleToken } = useClip(value)
-  return (
-    <TooltipRoot>
-      <TooltipTrigger
-        disabled={!isClipped}
-        render={
-          <span
-            ref={ref}
-            className={clsx(isSingleToken ? styles.truncate : styles.wrap, className)}
-          >
-            {value}
-          </span>
-        }
-      />
-      <TooltipContent>{value}</TooltipContent>
-    </TooltipRoot>
-  )
-}
-
-// ─── Value change ────────────────────────────────────────────────────────────
-// Shows an update as the old value (red) and new value (green) with an arrow
-// between them. They sit side by side on one line while they fit, and only wrap
-// onto a new line when the pair is too wide for the column. Each value reuses
-// `TextCell`, so a long number truncates (with a hover tooltip) while free text
-// wraps.
-function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: string }) {
-  return (
-    <span className={styles.valueChange}>
-      <TextCell value={oldValue} className={styles.oldValue} />
-      <ArrowLeft className={styles.valueArrow} size="0.85rem" aria-hidden />
-      <TextCell value={newValue} className={styles.newValue} />
-    </span>
-  )
-}
+const sortByDayInPeriod: SortingFn<FoodLog> = (a, b) =>
+  (a.original.dayInPeriod ?? 0) - (b.original.dayInPeriod ?? 0)
 
 // ─── Column definitions ──────────────────────────────────────────────────────
-// All data columns are sortable (TanStack Table's default). Date columns hold
-// real `Date` objects and format on display; `sortByDate` compares them by time
-// and treats a missing date as the earliest value so sorting never crashes.
-const sortByDate: SortingFn<FoodLog> = (rowA, rowB, columnId) => {
-  const a = rowA.getValue<Date | undefined>(columnId)
-  const b = rowB.getValue<Date | undefined>(columnId)
-  return (a ? a.getTime() : 0) - (b ? b.getTime() : 0)
-}
-
-// The change-date and change-time columns share one underlying timestamp but
-// behave like two independent fields: the date column sorts by calendar day
-// (above), while the time column sorts by time-of-day only — so 09:00 always
-// comes before 17:00 regardless of which day each change happened on.
-const secondsOfDay = (date: Date | undefined): number =>
-  date ? date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds() : 0
-
-const sortByTimeOfDay: SortingFn<FoodLog> = (rowA, rowB, columnId) =>
-  secondsOfDay(rowA.getValue<Date | undefined>(columnId)) -
-  secondsOfDay(rowB.getValue<Date | undefined>(columnId))
-
+// All data columns are sortable (TanStack Table's default) and globally
+// filterable via the built-in `includesString` filter (configured on the table).
 export const columns: ColumnDef<FoodLog>[] = [
   {
-    accessorKey: 'changeDate',
+    id: 'changeDate',
+    accessorFn: (row) => dateSearchText(row.changeDate),
     header: 'תאריך שינוי',
-    sortingFn: sortByDate,
-    cell: ({ getValue }) => formatDateShort(getValue<Date>()),
+    sortingFn: sortByChangeDate,
+    cell: ({ row }) => formatDateShort(row.original.changeDate),
   },
   {
     id: 'changeTime',
-    accessorFn: (row) => row.changeDate,
+    accessorFn: (row) => formatTimeShort(row.changeDate),
     header: 'שעת שינוי',
-    sortingFn: sortByTimeOfDay,
-    cell: ({ getValue }) => formatTimeShort(getValue<Date>()),
+    sortingFn: sortByChangeTime,
+    cell: ({ getValue }) => getValue<string>(),
   },
   {
-    accessorKey: 'typeOfChange',
+    id: 'typeOfChange',
+    accessorFn: (row) => changeTypeLabel(row.typeOfChange),
     header: 'סוג שינוי',
-    cell: ({ getValue }) => <ChangeTypeBadge code={getValue<string>()} />,
+    cell: ({ row }) => <ChangeTypeBadge code={row.original.typeOfChange} />,
   },
   {
     accessorKey: 'material',
@@ -142,18 +75,18 @@ export const columns: ColumnDef<FoodLog>[] = [
     cell: ({ getValue }) => <TextCell value={String(getValue<number>())} />,
   },
   {
-    accessorKey: 'consumptionDate',
+    id: 'consumptionDate',
+    accessorFn: (row) => dateSearchText(row.consumptionDate),
     header: 'תאריך צריכה',
-    sortingFn: sortByDate,
-    cell: ({ getValue }) => formatDateShort(getValue<Date | undefined>()),
+    sortingFn: sortByConsumptionDate,
+    cell: ({ row }) => formatDateShort(row.original.consumptionDate),
   },
   {
-    accessorKey: 'dayInPeriod',
+    id: 'dayInPeriod',
+    accessorFn: (row) => (row.dayInPeriod == null ? '' : String(row.dayInPeriod)),
     header: 'יום בתקופה',
-    cell: ({ getValue }) => {
-      const value = getValue<number | undefined>()
-      return <TextCell value={value == null ? '' : String(value)} />
-    },
+    sortingFn: sortByDayInPeriod,
+    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
   },
   {
     accessorKey: 'changedBy',
@@ -167,6 +100,7 @@ export const columns: ColumnDef<FoodLog>[] = [
   },
   {
     id: 'valueChange',
+    accessorFn: (row) => `${row.oldValue} ${row.newValue}`,
     header: 'שינוי ערך',
     enableSorting: false,
     cell: ({ row }) => {
