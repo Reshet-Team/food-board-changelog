@@ -43,3 +43,6 @@ todos.json
 # Agent files
 .claude/worktrees/
 .agent/worktrees/
+
+# Personal docs
+docs/code-walkthrough-for-beginners.md

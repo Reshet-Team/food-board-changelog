@@ -15,12 +15,12 @@ import {
   EmptyTitle,
 } from '@/components/ui/Empty/Empty'
 import { Input } from '@/components/ui/Input/Input'
-import { useToast } from '@/components/ui/Toast/useToast'
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '@/components/ui/Tooltip/Tooltip'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/changeType'
-import { formatSapDate, formatSapTime } from '@/utils/date'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import { useResizeObserver } from '@/hooks/useResizeObserver'
+import { formatDateShort, formatTimeShort, toSapDate } from '@/utils/date'
+import type { ColumnDef, FilterFn, SortingFn } from '@tanstack/react-table'
 import clsx from 'clsx'
 import {
   ArrowLeft,
@@ -30,7 +30,7 @@ import {
   Search,
   TriangleAlert,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import * as XLSX from 'xlsx'
 import styles from './FoodLogsTable.module.scss'
 
@@ -62,13 +62,12 @@ function rowSearchText(row: FoodLog): string {
     changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
-    formatSapDate(row.consumptionDate),
-    row.consumptionDate,
+    formatDateShort(row.consumptionDate),
+    row.consumptionDate ? toSapDate(row.consumptionDate) : '',
     row.dayInPeriod,
-    formatSapDate(row.changeDate),
-    row.changeDate,
-    formatSapTime(row.changeTime),
-    row.changeTime,
+    formatDateShort(row.changeDate),
+    toSapDate(row.changeDate),
+    formatTimeShort(row.changeDate),
     row.changedBy,
     row.field,
     row.oldValue,
@@ -91,12 +90,12 @@ const globalFilterFn: FilterFn<FoodLog> = (row, _columnId, filterValue: string) 
 /** Builds a real .xlsx workbook from the current rows and downloads it. */
 function exportExcel(rows: FoodLog[]): void {
   const body = rows.map((row) => [
-    formatSapDate(row.changeDate),
-    formatSapTime(row.changeTime),
+    formatDateShort(row.changeDate),
+    formatTimeShort(row.changeDate),
     changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
-    formatSapDate(row.consumptionDate),
+    formatDateShort(row.consumptionDate),
     row.dayInPeriod ?? '',
     row.changedBy,
     row.field,
@@ -137,17 +136,12 @@ function useClip(value: string) {
   const trimmed = value.trim()
   const isSingleToken = trimmed.length > 0 && !/\s/.test(trimmed)
 
-  useEffect(() => {
+  // Re-measure on mount, on resize, and whenever the value (and therefore the
+  // single-token check) changes. A multi-token value is allowed to wrap, so it
+  // is never reported as clipped.
+  useResizeObserver(ref, () => {
     const el = ref.current
-    if (!el || !isSingleToken) {
-      setIsClipped(false)
-      return
-    }
-    const measure = () => setIsClipped(el.scrollWidth > el.clientWidth)
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => observer.disconnect()
+    setIsClipped(!!el && isSingleToken && el.scrollWidth > el.clientWidth)
   }, [value, isSingleToken])
 
   return { ref, isClipped, isSingleToken }
@@ -196,18 +190,39 @@ function ValueChange({ oldValue, newValue }: { oldValue: string; newValue: strin
 }
 
 // ─── Column definitions ──────────────────────────────────────────────────────
-// All data columns are sortable (TanStack Table's default). Date/time columns
-// store the raw SAP wire value (so sorting stays correct) and format on display.
+// All data columns are sortable (TanStack Table's default). Date columns hold
+// real `Date` objects and format on display; `sortByDate` compares them by time
+// and treats a missing date as the earliest value so sorting never crashes.
+const sortByDate: SortingFn<FoodLog> = (rowA, rowB, columnId) => {
+  const a = rowA.getValue<Date | undefined>(columnId)
+  const b = rowB.getValue<Date | undefined>(columnId)
+  return (a ? a.getTime() : 0) - (b ? b.getTime() : 0)
+}
+
+// The change-date and change-time columns share one underlying timestamp but
+// behave like two independent fields: the date column sorts by calendar day
+// (above), while the time column sorts by time-of-day only — so 09:00 always
+// comes before 17:00 regardless of which day each change happened on.
+const secondsOfDay = (date: Date | undefined): number =>
+  date ? date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds() : 0
+
+const sortByTimeOfDay: SortingFn<FoodLog> = (rowA, rowB, columnId) =>
+  secondsOfDay(rowA.getValue<Date | undefined>(columnId)) -
+  secondsOfDay(rowB.getValue<Date | undefined>(columnId))
+
 const columns: ColumnDef<FoodLog>[] = [
   {
     accessorKey: 'changeDate',
     header: 'תאריך שינוי',
-    cell: ({ getValue }) => formatSapDate(getValue<string>()),
+    sortingFn: sortByDate,
+    cell: ({ getValue }) => formatDateShort(getValue<Date>()),
   },
   {
-    accessorKey: 'changeTime',
+    id: 'changeTime',
+    accessorFn: (row) => row.changeDate,
     header: 'שעת שינוי',
-    cell: ({ getValue }) => formatSapTime(getValue<string>()),
+    sortingFn: sortByTimeOfDay,
+    cell: ({ getValue }) => formatTimeShort(getValue<Date>()),
   },
   {
     accessorKey: 'typeOfChange',
@@ -227,7 +242,8 @@ const columns: ColumnDef<FoodLog>[] = [
   {
     accessorKey: 'consumptionDate',
     header: 'תאריך צריכה',
-    cell: ({ getValue }) => formatSapDate(getValue<string | undefined>()),
+    sortingFn: sortByDate,
+    cell: ({ getValue }) => formatDateShort(getValue<Date | undefined>()),
   },
   {
     accessorKey: 'dayInPeriod',
@@ -285,7 +301,6 @@ export function FoodLogsTable({
   onRetry,
   filtersSlot,
 }: FoodLogsTableProps) {
-  const toast = useToast()
   const rows = useMemo(() => data ?? [], [data])
 
   // Free-text search across every column. Kept in component state and fed to the
@@ -297,18 +312,6 @@ export function FoodLogsTable({
     () => (trimmedQuery ? rows.filter((row) => matchesQuery(row, trimmedQuery)) : rows),
     [rows, trimmedQuery],
   )
-
-  // Surface a toast whenever a fetch fails. Depend only on `isError` — the toast
-  // manager object identity changes every render, so including it would loop.
-  useEffect(() => {
-    if (!isError) return
-    toast.add({
-      type: 'error',
-      title: 'שגיאה בטעינת הנתונים',
-      description: 'לא ניתן לטעון את רשומות השינויים. נסה שוב.',
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isError])
 
   // ─── Idle — no search submitted yet ────────────────────────────────────────
   if (!hasSearched) {

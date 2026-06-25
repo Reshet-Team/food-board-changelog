@@ -1,4 +1,5 @@
-import type { FoodLog, FoodLogsFilter } from '@/features/foodLogs/types/foodLog'
+import type { FoodLog, FoodLogsFilter, RawFoodLog } from '@/features/foodLogs/types/foodLog'
+import { toFoodLog } from '@/features/foodLogs/utils/parseFoodLog'
 import { toSapDate } from '@/utils/date'
 import { filterMockFoodLogs } from './mockFoodLogs'
 
@@ -25,7 +26,7 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
   if (material?.length) url.searchParams.set('material', material.join(','))
   if (changedBy?.length) url.searchParams.set('changedBy', changedBy.join(','))
   url.searchParams.set('dateFrom', toSapDate(dateFrom))
-  if (dateTo) url.searchParams.set('dateTo', toSapDate(dateTo))
+  url.searchParams.set('dateTo', toSapDate(dateTo))
   if (consumptionDateFrom)
     url.searchParams.set('consumptionDateFrom', toSapDate(consumptionDateFrom))
   if (consumptionDateTo) url.searchParams.set('consumptionDateTo', toSapDate(consumptionDateTo))
@@ -42,6 +43,6 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
 
   if (!response.ok) throw new Error(`SAP error: ${response.status}`)
 
-  const raw: FoodLog[] = await response.json()
-  return raw
+  const raw: RawFoodLog[] = await response.json()
+  return raw.map(toFoodLog)
 }

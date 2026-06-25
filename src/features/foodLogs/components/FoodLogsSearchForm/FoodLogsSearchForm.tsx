@@ -38,6 +38,17 @@ const searchForm = createForm(foodLogsSearchSchema)
 // ─── Required field names (for showing the * indicator) ──────────────────────
 const REQUIRED_FIELDS = new Set(['foodBoard', 'alternative', 'dateFrom'])
 
+// ─── Daily alternatives ───────────────────────────────────────────────────────
+// Alternatives whose type value is "daily" require a consumption date. There
+// are ~100 alternatives but only a handful of types, so the daily/monthly
+// distinction is driven by the type value, not the alternative number.
+const DAILY_TYPE_VALUES = new Set([4, 6])
+
+function isDailyAlternative(alternativeValue: string, options: AlternativeOption[]): boolean {
+  const selected = options.find((option) => option.value === alternativeValue)
+  return selected ? DAILY_TYPE_VALUES.has(Number(selected.typeValue)) : false
+}
+
 // ─── Context for passing button state into the submit button slot ─────────────
 // The submit button component must be defined outside the parent component
 // to keep a stable reference. We use React context to pass state into it.
@@ -206,8 +217,8 @@ function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   const { options, isLoading } = useContext(AlternativesContext)
   const current = (value as string | undefined) ?? ''
 
-  // Each option is shown as "value — description" so the user sees both.
-  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.description}`
+  // Each option is shown as "value — type description" so the user sees both.
+  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.typeDescription}`
   // The currently selected option object (or null when nothing is chosen).
   const selectedOption = options.find((option) => option.value === current) ?? null
 
@@ -447,10 +458,9 @@ export function FoodLogsSearchForm({
     () => !!(defaultValues.foodBoard && defaultValues.alternative),
   )
 
-  // Alternatives 4 & 6 ("daily") require a consumption date; all others (incl.
-  // the monthly 3 & 5) can't have one, so the field is greyed out.
-  const altNum = Number(alternativeValue)
-  const consumptionEnabled = altNum === 4 || altNum === 6
+  // "Daily" alternatives require a consumption date; all others can't have one,
+  // so the field is greyed out. Determined by the alternative's description.
+  const consumptionEnabled = isDailyAlternative(alternativeValue, alternatives ?? [])
   const consumptionError =
     consumptionEnabled && !consumptionRange ? 'יש לבחור טווח תאריכי צריכה' : null
 
@@ -567,8 +577,7 @@ export function FoodLogsSearchForm({
                 const alt = vals.alternative
                 setAlternativeValue(alt)
                 // Clear any consumption range when the alternative can't have one.
-                const num = Number(alt)
-                if (num !== 4 && num !== 6) {
+                if (!isDailyAlternative(alt, alternatives ?? [])) {
                   setConsumptionRange((prev) => (prev ? null : prev))
                 }
               }}

@@ -8,10 +8,10 @@ export interface FoodLogsFilter {
   foodBoard: string // STNUM  — Food Board number
   alternative: string // ALTNR  — Alternative number
   dateFrom: Date // DATUM  — From Change Date. Default: yesterday.
+  dateTo: Date // DATUM  — To Change Date. Default: today.
+  //          Range cannot exceed 6 months from dateFrom.
 
   // Optional
-  dateTo?: Date // DATUM  — To Change Date. Default: today.
-  //          Range cannot exceed 6 months from dateFrom.
   material?: string[] // MATNR  — One or more material numbers (zero-padded CHAR18)
   consumptionDateFrom?: Date // DATUM  — From consumption date
   consumptionDateTo?: Date // DATUM  — To consumption date
@@ -19,29 +19,51 @@ export interface FoodLogsFilter {
 }
 
 // ─── Alternative option (dropdown choice) ────────────────────────────────────
-// One selectable alternative returned by the alternatives API as a value +
-// description pair; the dropdown shows both.
+// One selectable alternative returned by the alternatives API. There are ~100
+// alternatives but only a handful of types; each alternative carries its type
+// value (numeric code) and a human-readable type description. The dropdown
+// shows the value and the type description.
 
 export interface AlternativeOption {
   value: string // ALTNR — Alternative number (e.g. "04")
-  description: string // Human-readable description shown next to the value
+  typeValue: string // Type code that groups alternatives (e.g. "4", "6")
+  typeDescription: string // Human-readable type shown next to the value (e.g. "יומית")
 }
 
 // ─── Food Log Record (one table row) ────────────────────────────────────────
-// Represents a single change-log entry returned by SAP.
+// Represents a single change-log entry returned by SAP. Date fields are parsed
+// into real `Date` objects at the API boundary (see utils/parseFoodLog); the
+// raw SAP wire shape, with YYYYMMDD strings, is `RawFoodLog` below.
 
 export interface FoodLog {
   typeOfChange: string // CHANGE_IND — Change-document indicator code (I/J/U/D/E)
   material: string // MATNR     — Material number (CHAR18, zero-padded)
   quantity: number // KMPMG     — Component quantity
-  consumptionDate?: string // DATUM     — Consumption date (YYYYMMDD). Optional — may be absent.
+  consumptionDate?: Date // DATUM     — Consumption date. Optional — may be absent.
   dayInPeriod?: number // CIM_COUNT — Day counter within the period. Optional — may be absent.
-  changeDate: string // DATUM     — Date of change (YYYYMMDD)
-  changeTime: string // UZEIT     — Time of change (HHMMSS)
+  changeDate: Date // DATUM + UZEIT — Full change timestamp (date + time-of-day).
   changedBy: string // USNAM     — Username who made the change
   field: string // FIELDNAME — Name of the changed field
   oldValue: string // CDFLDVALO — Value before the change
   newValue: string // CDFLDVALN — Value after the change
+}
+
+// ─── Raw Food Log Record (SAP wire shape) ───────────────────────────────────
+// Exactly what SAP returns over the wire: date fields are YYYYMMDD strings.
+// `toFoodLog` (utils/parseFoodLog) converts this into the `FoodLog` above.
+
+export interface RawFoodLog {
+  typeOfChange: string
+  material: string
+  quantity: number
+  consumptionDate?: string // DATUM — YYYYMMDD
+  dayInPeriod?: number
+  changeDate: string // DATUM — YYYYMMDD
+  changeTime: string // UZEIT — HHMMSS
+  changedBy: string
+  field: string
+  oldValue: string
+  newValue: string
 }
 
 // ─── Search Params Schema (URL state + form validation) ──────────────────────

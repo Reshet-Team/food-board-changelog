@@ -1,4 +1,5 @@
 import { ToastProvider } from '@/components/ui/Toast/Toast'
+import { toastManager } from '@/components/ui/Toast/toastManager'
 import { TooltipProvider } from '@/components/ui/Tooltip/Tooltip'
 import { ThemeProvider } from '@/theme/useTheme'
 import { DirectionProvider } from '@base-ui/react/direction-provider'
@@ -20,7 +21,7 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <DirectionProvider direction="rtl">
-        <ToastProvider>
+        <ToastProvider toastManager={toastManager}>
           <TooltipProvider delay={300} closeDelay={100}>
             <Outlet />
           </TooltipProvider>

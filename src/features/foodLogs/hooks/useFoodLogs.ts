@@ -14,5 +14,13 @@ export function useFoodLogs(filter: FoodLogsFilter | null) {
     enabled: filter !== null,
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    // Shown by the global query error handler (see lib/queryClient.ts) whenever
+    // this fetch fails — no per-component effect needed.
+    meta: {
+      errorToast: {
+        title: 'שגיאה בטעינת הנתונים',
+        description: 'לא ניתן לטעון את רשומות השינויים. נסה שוב.',
+      },
+    },
   })
 }

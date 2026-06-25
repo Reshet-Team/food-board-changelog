@@ -1,5 +1,6 @@
+import { useResizeObserver } from '@/hooks/useResizeObserver'
 import clsx from 'clsx'
-import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
+import { useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
 import styles from './Container.module.scss'
 
 interface ContainerProps extends HTMLAttributes<HTMLDivElement> {
@@ -10,15 +11,10 @@ function Container({ children, className, ...props }: ContainerProps) {
   const innerRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(undefined)
 
-  useEffect(() => {
+  useResizeObserver(innerRef, () => {
     const el = innerRef.current
-    if (!el) return
-    const observer = new ResizeObserver(() => {
-      setHeight(el.getBoundingClientRect().height)
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+    if (el) setHeight(el.getBoundingClientRect().height)
+  })
 
   return (
     <div

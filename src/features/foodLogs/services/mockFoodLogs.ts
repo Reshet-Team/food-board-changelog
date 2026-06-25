@@ -1,5 +1,6 @@
-import type { FoodLog, FoodLogsFilter } from '@/features/foodLogs/types/foodLog'
+import type { FoodLog, FoodLogsFilter, RawFoodLog } from '@/features/foodLogs/types/foodLog'
 import { classifyChangeType } from '@/features/foodLogs/utils/changeType'
+import { toFoodLog } from '@/features/foodLogs/utils/parseFoodLog'
 import { toSapDate } from '@/utils/date'
 
 // ─── Mock dataset ─────────────────────────────────────────────────────────────
@@ -60,8 +61,10 @@ function valuesForField(field: string, index: number): { oldValue: string; newVa
 }
 
 // Builds a single mock row for the given index. The index seeds all the varied
-// fields (dates, materials, users…) so each row looks distinct.
-function buildFoodLog(index: number): FoodLog {
+// fields (dates, materials, users…) so each row looks distinct. Produced in the
+// raw SAP wire shape (YYYYMMDD strings); `filterMockFoodLogs` parses it on the
+// way out, exactly like the real API.
+function buildFoodLog(index: number): RawFoodLog {
   const dayOffset = -index
   const field = FIELDS[index % FIELDS.length]!
   const typeOfChange = TYPES_OF_CHANGE[index % TYPES_OF_CHANGE.length]!
@@ -95,7 +98,7 @@ function buildFoodLog(index: number): FoodLog {
 // server-side filter), but the mock tags each row so it can mimic that filter.
 interface MockRow {
   alternative: string
-  log: FoodLog
+  log: RawFoodLog
 }
 
 // Base spread across alternatives 01–06 so each dropdown option returns its own
@@ -152,5 +155,5 @@ export function filterMockFoodLogs(filter: FoodLogsFilter): FoodLog[] {
     if (to && (log.consumptionDate == null || log.consumptionDate > to)) return false
 
     return true
-  }).map((row) => row.log)
+  }).map((row) => toFoodLog(row.log))
 }

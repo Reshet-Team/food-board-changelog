@@ -1,15 +1,16 @@
 import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 
 // ─── Mock alternatives ────────────────────────────────────────────────────────
-// Served when no SAP backend is configured. Alternatives 3 & 5 are "monthly"
-// (no consumption date); 4 & 6 are "daily" and require a consumption date.
+// Served when no SAP backend is configured. Type values 4 & 6 are "daily" and
+// require a consumption date; all other types (e.g. 3 & 5, "monthly") can't have
+// one.
 const MOCK_ALTERNATIVES: AlternativeOption[] = [
-  { value: '01', description: 'חלופה רגילה' },
-  { value: '02', description: 'חלופה רגילה' },
-  { value: '03', description: 'חודשית' },
-  { value: '04', description: 'יומית' },
-  { value: '05', description: 'חודשית' },
-  { value: '06', description: 'יומית' },
+  { value: '01', typeValue: '1', typeDescription: 'רגילה' },
+  { value: '02', typeValue: '1', typeDescription: 'רגילה' },
+  { value: '03', typeValue: '3', typeDescription: 'חודשית' },
+  { value: '04', typeValue: '4', typeDescription: 'יומית' },
+  { value: '05', typeValue: '5', typeDescription: 'חודשית' },
+  { value: '06', typeValue: '6', typeDescription: 'יומית' },
 ]
 
 // Fetches the global list of alternative options for the search dropdown.
