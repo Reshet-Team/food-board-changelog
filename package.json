@@ -30,6 +30,7 @@
     "@tanstack/router-plugin": "^1.168.18",
     "@uniform-ts/core": "^0.1.2",
     "clsx": "^2.1.1",
+    "jotai": "^2.20.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.7",
     "react-aria": "^3.49.0",

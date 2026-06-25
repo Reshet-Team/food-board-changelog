@@ -2,19 +2,20 @@ import { Button } from '@/components/ui/Button/Button'
 import { FoodLogsSearchForm } from '@/features/foodLogs/components/FoodLogsSearchForm/FoodLogsSearchForm'
 import { FoodLogsTable } from '@/features/foodLogs/components/FoodLogsTable/FoodLogsTable'
 import { useFoodLogs } from '@/features/foodLogs/hooks/useFoodLogs'
+import { foodLogsFilterAtom } from '@/features/foodLogs/store/filterAtom'
 import type { FoodLogsFilter } from '@/features/foodLogs/types/foodLog'
 import {
   ALL_CHANGE_TYPES,
   matchesChangeTypes,
   type ChangeType,
 } from '@/features/foodLogs/utils/changeType'
-import { useSearch } from '@tanstack/react-router'
+import { useAtomValue } from 'jotai'
 import { SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import styles from './FoodLogsPage.module.scss'
 
 export function FoodLogsPage() {
-  const search = useSearch({ from: '/food-logs' })
+  const search = useAtomValue(foodLogsFilterAtom)
   const [filtersOpen, setFiltersOpen] = useState(true)
   // Local change-type filter, applied to the rows after they arrive from SAP.
   // Defaults to every category selected (shows everything).
@@ -44,16 +45,16 @@ export function FoodLogsPage() {
         }
       : null
 
-  const query = useFoodLogs(filter)
-  const rows = query.data ?? []
+  const { data, isLoading, isError, isFetching, refetch } = useFoodLogs(filter)
+  const rows = data ?? []
 
   // Apply the local change-type filter before the table sees the data. When all
   // categories are selected the original list (including its loading/undefined
   // state) is passed through untouched.
   const displayedData =
-    query.data && changeTypes.length < ALL_CHANGE_TYPES.length
-      ? query.data.filter((row) => matchesChangeTypes(row.typeOfChange, changeTypes))
-      : query.data
+    data && changeTypes.length < ALL_CHANGE_TYPES.length
+      ? data.filter((row) => matchesChangeTypes(row.typeOfChange, changeTypes))
+      : data
 
   // While the table has no rows to show, the filter panel stays open and the
   // toggle is locked — there's nothing to reveal by closing it, and the user
@@ -88,10 +89,10 @@ export function FoodLogsPage() {
         <main className={styles.main}>
           <FoodLogsTable
             data={displayedData}
-            isLoading={query.isLoading}
-            isError={query.isError}
+            isLoading={isLoading}
+            isError={isError}
             hasSearched={filter !== null}
-            onRetry={() => void query.refetch()}
+            onRetry={() => void refetch()}
             filtersSlot={filtersButton}
           />
         </main>
@@ -100,7 +101,7 @@ export function FoodLogsPage() {
           <aside className={styles.sidebar}>
             <FoodLogsSearchForm
               defaultValues={search}
-              isLoading={query.isFetching}
+              isLoading={isFetching}
               changeTypes={changeTypes}
               onChangeTypesChange={setChangeTypes}
             />

@@ -1,404 +1,39 @@
 import { Button } from '@/components/ui/Button/Button'
-import { Checkbox } from '@/components/ui/Checkbox/Checkbox'
-import {
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxRoot,
-} from '@/components/ui/Combobox/Combobox'
 import type { DateRangeValue } from '@/components/ui/DatePicker/DatePicker'
-import DatePicker from '@/components/ui/DatePicker/DatePicker'
-import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
-import { Input } from '@/components/ui/Input/Input'
-import { Spinner } from '@/components/ui/Spinner/Spinner'
-import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
-import type { AlternativeOption, FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
-import { foodLogsSearchSchema } from '@/features/foodLogs/types/foodLog'
+import { FormActionsButtons } from '@/features/foodLogs/components/FoodLogsSearchForm/FormActionsButtons'
 import {
-  ALL_CHANGE_TYPES,
-  CHANGE_TYPE_OPTIONS,
-  type ChangeType,
-} from '@/features/foodLogs/utils/changeType'
-import { useNavigate } from '@tanstack/react-router'
-import type {
-  AutoFormHandle,
-  FieldProps,
-  FieldWrapperProps,
-  SubmitButtonProps,
-} from '@uniform-ts/core'
+  AlternativesContext,
+  DateRangeContext,
+  FormActionsContext,
+  type AlternativesContextValue,
+  type DateRangeContextValue,
+  type FormActionsContextValue,
+} from '@/features/foodLogs/components/FoodLogsSearchForm/searchFormContext'
+import {
+  AlternativeSelect,
+  ChangedByChipsInput,
+  ConsumptionDateRangeFieldPicker,
+  DateRangeFieldPicker,
+  FormFieldWrapper,
+  MaterialChipsInput,
+  NumericInput,
+  StringInput,
+} from '@/features/foodLogs/components/FoodLogsSearchForm/SearchFormFields'
+import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
+import { defaultFoodLogsFilter, foodLogsFilterAtom } from '@/features/foodLogs/store/filterAtom'
+import type { FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
+import { foodLogsSearchSchema } from '@/features/foodLogs/types/foodLog'
+import { ALL_CHANGE_TYPES, type ChangeType } from '@/features/foodLogs/utils/changeType'
+import type { AutoFormHandle } from '@uniform-ts/core'
 import { AutoForm, createForm } from '@uniform-ts/core'
-import clsx from 'clsx'
-import { Filter, X } from 'lucide-react'
-import { createContext, useContext, useRef, useState } from 'react'
+import { useSetAtom } from 'jotai'
+import { Filter } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { isDailyAlternative } from './dailyAlternative'
 import styles from './FoodLogsSearchForm.module.scss'
 
 // ─── UniForm definition (created once, outside the component) ────────────────
 const searchForm = createForm(foodLogsSearchSchema)
-
-// ─── Required field names (for showing the * indicator) ──────────────────────
-const REQUIRED_FIELDS = new Set(['foodBoard', 'alternative', 'dateFrom'])
-
-// ─── Daily alternatives ───────────────────────────────────────────────────────
-// Alternatives whose type value is "daily" require a consumption date. There
-// are ~100 alternatives but only a handful of types, so the daily/monthly
-// distinction is driven by the type value, not the alternative number.
-const DAILY_TYPE_VALUES = new Set([4, 6])
-
-function isDailyAlternative(alternativeValue: string, options: AlternativeOption[]): boolean {
-  const selected = options.find((option) => option.value === alternativeValue)
-  return selected ? DAILY_TYPE_VALUES.has(Number(selected.typeValue)) : false
-}
-
-// ─── Context for passing button state into the submit button slot ─────────────
-// The submit button component must be defined outside the parent component
-// to keep a stable reference. We use React context to pass state into it.
-interface FormActionsContextValue {
-  isDisabled: boolean
-  isLoading: boolean
-  onReset: () => void
-  // Local change-type filter, rendered just above the apply button.
-  changeTypes: ChangeType[]
-  onChangeTypesChange: (value: ChangeType[]) => void
-}
-
-const FormActionsContext = createContext<FormActionsContextValue>({
-  isDisabled: true,
-  isLoading: false,
-  onReset: () => {},
-  changeTypes: [],
-  onChangeTypesChange: () => {},
-})
-
-// ─── Context for passing the range picker values into the date fields ─────────
-// Carries both the change-date range (dateFrom/dateTo) and the optional
-// consumption-date range, since both are rendered by custom field components
-// defined outside the parent and need access to the shared range state.
-interface DateRangeContextValue {
-  rangePickerValue: DateRangeValue | null
-  onRangeChange: (value: DateRangeValue | null) => void
-  rangeError: string | null
-  consumptionRange: DateRangeValue | null
-  onConsumptionRangeChange: (value: DateRangeValue | null) => void
-  // Whether the consumption-date range is applicable for the chosen alternative.
-  // When false the field is greyed out; when true it becomes required.
-  consumptionEnabled: boolean
-  consumptionError: string | null
-}
-
-const DateRangeContext = createContext<DateRangeContextValue>({
-  rangePickerValue: null,
-  onRangeChange: () => {},
-  rangeError: null,
-  consumptionRange: null,
-  onConsumptionRangeChange: () => {},
-  consumptionEnabled: false,
-  consumptionError: null,
-})
-
-// ─── Context for passing the fetched alternative options into the select ──────
-interface AlternativesContextValue {
-  options: AlternativeOption[]
-  isLoading: boolean
-}
-
-const AlternativesContext = createContext<AlternativesContextValue>({
-  options: [],
-  isLoading: false,
-})
-
-// ─── Submit button — change-type filter + full-width "apply filters" action ───
-// Rendered as the form's submit slot so the change-type checkboxes sit inside
-// the same filters block as the other fields, right above the apply button.
-function FormActionsButtons({ isSubmitting }: SubmitButtonProps) {
-  const { isDisabled, isLoading, changeTypes, onChangeTypesChange } = useContext(FormActionsContext)
-  const isBusy = isSubmitting || isLoading
-
-  return (
-    <>
-      <div className={styles.changeTypeFilter}>
-        <span className={styles.changeTypeLabel}>סוג שינוי</span>
-        <div className={styles.checkboxGroup}>
-          {CHANGE_TYPE_OPTIONS.map((option) => {
-            const checked = changeTypes.includes(option.value)
-            // Keep at least one category selected: the last remaining checkbox
-            // can't be unticked.
-            const isLastChecked = checked && changeTypes.length === 1
-            return (
-              <Checkbox
-                key={option.value}
-                size="sm"
-                label={option.label}
-                checked={checked}
-                disabled={isLastChecked}
-                onCheckedChange={(next) => {
-                  if (next) {
-                    onChangeTypesChange([...changeTypes, option.value])
-                  } else if (changeTypes.length > 1) {
-                    onChangeTypesChange(changeTypes.filter((t) => t !== option.value))
-                  }
-                }}
-              />
-            )
-          })}
-        </div>
-      </div>
-      <div className={styles.actions}>
-        <Button type="submit" className={styles.applyButton} disabled={isBusy || isDisabled}>
-          {isBusy && <Spinner size="sm" color="inline" />}
-          החלת מסננים
-        </Button>
-      </div>
-    </>
-  )
-}
-
-// ─── Custom field wrapper — adds label with required indicator ────────────────
-function FormFieldWrapper({ children, field, error }: FieldWrapperProps) {
-  const { rangeError, consumptionEnabled, consumptionError } = useContext(DateRangeContext)
-  // consumptionDateFrom is required only when the chosen alternative needs one.
-  const isRequired =
-    REQUIRED_FIELDS.has(field.name) || (field.name === 'consumptionDateFrom' && consumptionEnabled)
-  const label = field.meta.label ?? field.label
-  // For the date fields, show the live range/consumption error over any form error.
-  let displayError = error
-  if (field.name === 'dateFrom') displayError = rangeError ?? error
-  if (field.name === 'consumptionDateFrom') displayError = consumptionError ?? error
-  return (
-    <FieldRoot>
-      {isRequired ? (
-        <FieldLabel indicator="required">{label}</FieldLabel>
-      ) : (
-        <FieldLabel>{label}</FieldLabel>
-      )}
-      {children}
-      {displayError && (
-        <span role="alert" className={styles.fieldError}>
-          {displayError}
-        </span>
-      )}
-    </FieldRoot>
-  )
-}
-
-// ─── Custom field components ──────────────────────────────────────────────────
-
-function StringInput({ value, onChange, onBlur, ref }: FieldProps) {
-  return (
-    <Input
-      ref={ref as React.Ref<HTMLInputElement>}
-      autoComplete="off"
-      value={(value as string | undefined) ?? ''}
-      onChange={(e) => onChange(e.target.value)}
-      onBlur={onBlur}
-    />
-  )
-}
-
-// Numeric-only input — rejects any character that is not a digit.
-function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
-  return (
-    <Input
-      ref={ref as React.Ref<HTMLInputElement>}
-      inputMode="numeric"
-      autoComplete="off"
-      value={(value as string | undefined) ?? ''}
-      onChange={(e) => {
-        const digits = e.target.value.replace(/\D/g, '')
-        onChange(digits)
-      }}
-      onBlur={onBlur}
-    />
-  )
-}
-
-// Alternative dropdown — populated from the alternatives API via context.
-// Uses a Combobox so the user can type to filter the (potentially ~100) options.
-function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
-  const { options, isLoading } = useContext(AlternativesContext)
-  const current = (value as string | undefined) ?? ''
-
-  // Each option is shown as "value — type description" so the user sees both.
-  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.typeDescription}`
-  // The currently selected option object (or null when nothing is chosen).
-  const selectedOption = options.find((option) => option.value === current) ?? null
-
-  return (
-    <ComboboxRoot<AlternativeOption>
-      items={options}
-      value={selectedOption}
-      onValueChange={(next: AlternativeOption | null) => {
-        // Store only the option's value (e.g. "04") as the form field value.
-        onChange(next?.value ?? '')
-        onBlur()
-      }}
-      itemToStringLabel={(option: AlternativeOption) => formatOption(option)}
-      itemToStringValue={(option: AlternativeOption) => option.value}
-      disabled={isLoading}
-    >
-      <ComboboxInput
-        size="md"
-        placeholder={isLoading ? 'טוען…' : 'בחר חלופה'}
-        inputProps={{ onBlur: () => onBlur() }}
-      />
-      <ComboboxList<AlternativeOption> emptyMessage="לא נמצאו חלופות">
-        {(option: AlternativeOption) => (
-          <ComboboxItem key={option.value} value={option}>
-            {formatOption(option)}
-          </ComboboxItem>
-        )}
-      </ComboboxList>
-    </ComboboxRoot>
-  )
-}
-
-// Range date picker — renders as the dateFrom field but controls both dates.
-// It reads/writes the shared range state via DateRangeContext.
-function DateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
-  const { rangePickerValue, onRangeChange } = useContext(DateRangeContext)
-
-  return (
-    <div className={styles.dateFieldWrapper}>
-      <DatePicker
-        mode="range"
-        value={rangePickerValue}
-        onChange={(range) => {
-          onRangeChange(range)
-          onChange(range?.start ?? null)
-          if (range) onBlur()
-        }}
-      />
-    </div>
-  )
-}
-
-// Consumption-date range picker. Greyed out and non-interactive (via `inert`)
-// when the chosen alternative doesn't support a consumption date.
-function ConsumptionDateRangeFieldPicker({ onChange, onBlur }: FieldProps) {
-  const { consumptionRange, onConsumptionRangeChange, consumptionEnabled } =
-    useContext(DateRangeContext)
-
-  return (
-    <div
-      className={clsx(styles.dateFieldWrapper, !consumptionEnabled && styles.disabledField)}
-      inert={!consumptionEnabled || undefined}
-    >
-      <DatePicker
-        mode="range"
-        value={consumptionRange}
-        onChange={(range) => {
-          onConsumptionRangeChange(range)
-          onChange(range?.start ?? undefined)
-          onBlur()
-        }}
-      />
-    </div>
-  )
-}
-
-// Chips input — collects multiple values. Type a value and press Enter (or
-// comma) to add it as a removable chip. Backspace on an empty input removes the
-// last chip. `digitsOnly` restricts entry to digits (used for material numbers).
-function ChipsInput({
-  value,
-  onChange,
-  onBlur,
-  inputRef,
-  digitsOnly,
-}: {
-  value: string[] | undefined
-  onChange: (next: string[]) => void
-  onBlur: () => void
-  inputRef?: React.Ref<HTMLInputElement>
-  digitsOnly: boolean
-}) {
-  const [draft, setDraft] = useState('')
-  const chips = value ?? []
-
-  function addChip() {
-    const trimmed = draft.trim()
-    if (!trimmed || chips.includes(trimmed)) {
-      setDraft('')
-      return
-    }
-    onChange([...chips, trimmed])
-    setDraft('')
-  }
-
-  function removeChip(index: number) {
-    onChange(chips.filter((_, i) => i !== index))
-  }
-
-  return (
-    <div className={styles.chipsField}>
-      {chips.length > 0 && (
-        <ul className={styles.chipList}>
-          {chips.map((chip, index) => (
-            <li key={chip} className={styles.chip}>
-              <span>{chip}</span>
-              <button
-                type="button"
-                className={styles.chipRemove}
-                aria-label={`הסר ${chip}`}
-                onClick={() => removeChip(index)}
-              >
-                <X size="0.75rem" aria-hidden />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <Input
-        ref={inputRef}
-        autoComplete="off"
-        inputMode={digitsOnly ? 'numeric' : undefined}
-        placeholder="הקלידו ולחצו על ENTER להוספה"
-        value={draft}
-        onChange={(e) => {
-          const next = digitsOnly ? e.target.value.replace(/\D/g, '') : e.target.value
-          setDraft(next)
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault()
-            addChip()
-          } else if (e.key === 'Backspace' && !draft && chips.length > 0) {
-            removeChip(chips.length - 1)
-          }
-        }}
-        onBlur={() => {
-          addChip()
-          onBlur()
-        }}
-      />
-    </div>
-  )
-}
-
-// Material chips — restricted to digit-only values.
-function MaterialChipsInput({ value, onChange, onBlur, ref }: FieldProps<string[]>) {
-  return (
-    <ChipsInput
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      inputRef={ref as React.Ref<HTMLInputElement>}
-      digitsOnly
-    />
-  )
-}
-
-// Changed-by chips — free-text usernames.
-function ChangedByChipsInput({ value, onChange, onBlur, ref }: FieldProps<string[]>) {
-  return (
-    <ChipsInput
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      inputRef={ref as React.Ref<HTMLInputElement>}
-      digitsOnly={false}
-    />
-  )
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -417,7 +52,7 @@ export function FoodLogsSearchForm({
   onChangeTypesChange,
 }: FoodLogsSearchFormProps) {
   const formRef = useRef<AutoFormHandle<typeof foodLogsSearchSchema>>(null)
-  const navigate = useNavigate()
+  const setFilter = useSetAtom(foodLogsFilterAtom)
 
   // Alternative options for the dropdown (global list, cached for the session).
   const { data: alternatives, isLoading: alternativesLoading } = useAlternatives()
@@ -470,15 +105,12 @@ export function FoodLogsSearchForm({
 
     if (rangeError) return
     if (consumptionEnabled && !consumptionRange) return
-    void navigate({
-      to: '/food-logs',
-      search: {
-        ...data,
-        dateFrom,
-        dateTo,
-        consumptionDateFrom: consumptionEnabled ? consumptionRange?.start : undefined,
-        consumptionDateTo: consumptionEnabled ? consumptionRange?.end : undefined,
-      },
+    setFilter({
+      ...data,
+      dateFrom,
+      dateTo,
+      consumptionDateFrom: consumptionEnabled ? consumptionRange?.start : undefined,
+      consumptionDateTo: consumptionEnabled ? consumptionRange?.end : undefined,
     })
   }
 
@@ -502,9 +134,9 @@ export function FoodLogsSearchForm({
     setIsMandatoryFilled(false)
     // Reselect every change-type category so the default is "show everything".
     onChangeTypesChange(ALL_CHANGE_TYPES)
-    // Clear the URL search params too. The table is driven by the URL, so this
-    // empties the results, and a later refresh won't repopulate stale fields.
-    void navigate({ to: '/food-logs', search: foodLogsSearchSchema.parse({}) })
+    // Clear the filter atom too. The table is driven by the atom, so this
+    // empties the results back to the idle state.
+    setFilter(defaultFoodLogsFilter)
   }
 
   const contextValue: FormActionsContextValue = {
