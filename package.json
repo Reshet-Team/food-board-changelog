@@ -36,6 +36,7 @@
     "react-aria": "^3.49.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.7",
+    "react-hook-form": "7.79.0",
     "react-stately": "^3.47.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.4.3"
