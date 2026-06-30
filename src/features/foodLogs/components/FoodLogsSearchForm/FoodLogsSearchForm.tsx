@@ -1,16 +1,6 @@
 import { Button } from '@/components/ui/Button/Button'
 import { Checkbox } from '@/components/ui/Checkbox/Checkbox'
 import { Spinner } from '@/components/ui/Spinner/Spinner'
-import {
-  AlternativeSelect,
-  ChangedByChipsInput,
-  ConsumptionDateRangeFieldPicker,
-  DateRangeFieldPicker,
-  FormFieldWrapper,
-  MaterialChipsInput,
-  NumericInput,
-  StringInput,
-} from '@/features/foodLogs/components/FoodLogsSearchForm/SearchFormFields'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import { defaultFoodLogsFilter, foodLogsFilterAtom } from '@/features/foodLogs/store/filterAtom'
 import type { FoodLogsSearchParams } from '@/features/foodLogs/types/foodLog'
@@ -25,9 +15,17 @@ import { AutoForm, createForm } from '@uniform-ts/core'
 import { useSetAtom } from 'jotai'
 import { Filter } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { isDailyAlternative } from './dailyAlternative'
-import { validateDateRange } from './dateRange'
+import { ConsumptionDateRangeFieldPicker, DateRangeFieldPicker } from './DateRangeFields'
 import styles from './FoodLogsSearchForm.module.scss'
+import {
+  AlternativeSelect,
+  ChangedByChipsInput,
+  FormFieldWrapper,
+  MaterialChipsInput,
+  NumericInput,
+  StringInput,
+} from './SearchFormFields'
+import { isDailyAlternative, validateDateRange } from './searchRules'
 
 // ─── UniForm definition (created once, outside the component) ────────────────
 const searchForm = createForm(foodLogsSearchSchema)

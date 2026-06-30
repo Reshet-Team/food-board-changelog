@@ -4,20 +4,17 @@ import {
   ComboboxList,
   ComboboxRoot,
 } from '@/components/ui/Combobox/Combobox'
-import DatePicker from '@/components/ui/DatePicker/DatePicker'
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 import type { FieldProps, FieldWrapperProps } from '@uniform-ts/core'
 import { useAutoFormContext } from '@uniform-ts/core'
-import clsx from 'clsx'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { useWatch } from 'react-hook-form'
-import { isDailyAlternative } from './dailyAlternative'
-import { validateDateRange } from './dateRange'
 import styles from './FoodLogsSearchForm.module.scss'
+import { isDailyAlternative, validateDateRange } from './searchRules'
 
 // ─── Required field names (for showing the * indicator) ──────────────────────
 const REQUIRED_FIELDS = new Set(['foodBoard', 'alternative', 'dateFrom'])
@@ -68,8 +65,9 @@ export function FormFieldWrapper({ children, field, error }: FieldWrapperProps) 
   )
 }
 
-// ─── Custom field components ──────────────────────────────────────────────────
+// ─── Text inputs ──────────────────────────────────────────────────────────────
 
+// Plain text input — used as the default `string` component.
 export function StringInput({ value, onChange, onBlur, ref }: FieldProps) {
   return (
     <Input
@@ -99,8 +97,10 @@ export function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
   )
 }
 
-// Alternative dropdown — populated directly from the alternatives API.
-// Uses a Combobox so the user can type to filter the (potentially ~100) options.
+// ─── Alternative dropdown ─────────────────────────────────────────────────────
+
+// Populated directly from the alternatives API. Uses a Combobox so the user can
+// type to filter the (potentially ~100) options.
 export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   const { data: alternatives, isLoading } = useAlternatives()
   const options = alternatives ?? []
@@ -140,69 +140,11 @@ export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   )
 }
 
-// Range date picker — renders as the dateFrom field but controls both dates.
-// `dateFrom` is its own field value; `dateTo` is read/written via the form.
-export function DateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
-  const { control, formMethods } = useAutoFormContext()
-  const start = (value as Date | undefined) ?? null
-  // `useWatch` makes the sibling `dateTo` read reactive, so the picker re-renders
-  // and displays the full range as soon as either end of the range changes.
-  const end = (useWatch({ control, name: 'dateTo' }) as Date | undefined) ?? null
-  const range = start && end ? { start, end } : null
+// ─── Chips inputs ─────────────────────────────────────────────────────────────
 
-  return (
-    <div className={styles.dateFieldWrapper}>
-      <DatePicker
-        mode="range"
-        value={range}
-        onChange={(next) => {
-          onChange(next?.start ?? null)
-          formMethods.setValue('dateTo', next?.end ?? null)
-          if (next) onBlur()
-        }}
-      />
-    </div>
-  )
-}
-
-// Consumption-date range picker. Greyed out and non-interactive (via `inert`)
-// when the chosen alternative doesn't support a consumption date. Like the
-// change-date picker it controls a pair of form fields.
-export function ConsumptionDateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
-  const { control, formMethods } = useAutoFormContext()
-  const { data: alternatives } = useAlternatives()
-  // Enabled state depends on the *alternative* field. `useWatch` keeps it
-  // reactive so the picker enables/disables as the alternative changes.
-  const alternative = useWatch({ control, name: 'alternative' }) as string | undefined
-  const consumptionEnabled = isDailyAlternative(alternative ?? '', alternatives ?? [])
-
-  const start = (value as Date | undefined) ?? null
-  // Reactive sibling read — without `useWatch` the second date would stay stale
-  // and the picker would never show the selected range.
-  const end = (useWatch({ control, name: 'consumptionDateTo' }) as Date | undefined) ?? null
-  const range = start && end ? { start, end } : null
-
-  return (
-    <div
-      className={clsx(styles.dateFieldWrapper, !consumptionEnabled && styles.disabledField)}
-      inert={!consumptionEnabled || undefined}
-    >
-      <DatePicker
-        mode="range"
-        value={range}
-        onChange={(next) => {
-          onChange(next?.start ?? undefined)
-          formMethods.setValue('consumptionDateTo', next?.end ?? undefined)
-          onBlur()
-        }}
-      />
-    </div>
-  )
-}
-
-// Chips input — collects multiple values. Type a value and press Enter (or
-// comma) to add it as a removable chip. Backspace on an empty input removes the
-// last chip. `digitsOnly` restricts entry to digits (used for material numbers).
+// Collects multiple values. Type a value and press Enter (or comma) to add it as
+// a removable chip. Backspace on an empty input removes the last chip.
+// `digitsOnly` restricts entry to digits (used for material numbers).
 function ChipsInput({
   value,
   onChange,
