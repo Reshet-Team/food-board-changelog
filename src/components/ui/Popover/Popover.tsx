@@ -15,7 +15,7 @@ export interface PopoverContentProps
     Pick<BasePopover.Positioner.Props, 'side' | 'sideOffset' | 'align' | 'alignOffset'>,
     SlotProps<typeof BasePopover, 'positioner' | 'arrow'> {
   children: React.ReactNode
-  /** Show the arrow indicator. Defaults to true. */
+
   arrow?: boolean
 }
 

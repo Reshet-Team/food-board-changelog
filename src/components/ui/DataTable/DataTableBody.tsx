@@ -11,7 +11,7 @@ import TablePrimitive from './TablePrimitive'
 export interface DataTableBodyProps {
   rowsRef?: RefObject<Record<string, HTMLTableRowElement | null>>
   lastRowRef?: RefObject<HTMLTableRowElement | null>
-  /** Message shown when there are no rows to display. */
+
   emptyMessage?: string
 }
 

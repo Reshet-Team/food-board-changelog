@@ -44,7 +44,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// eslint-disable-next-line
 export function useTheme() {
   const ctx = use(ThemeContext)
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider')

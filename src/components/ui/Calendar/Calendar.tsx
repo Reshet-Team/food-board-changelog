@@ -11,7 +11,6 @@ import { he } from 'react-day-picker/locale'
 import styles from './Calendar.module.scss'
 
 const classNames = {
-  // UI
   root: styles.root,
   chevron: styles.chevron,
   day: styles.day,
@@ -37,20 +36,17 @@ const classNames = {
   week_number_header: styles.weekNumberHeader,
   years_dropdown: styles.yearsDropdown,
 
-  // SelectionState
   range_end: styles.rangeEnd,
   range_middle: styles.rangeMiddle,
   range_start: styles.rangeStart,
   selected: styles.selected,
 
-  // DayFlag
   disabled: styles.disabled,
   hidden: styles.hidden,
   outside: styles.outside,
   focused: styles.focused,
   today: styles.today,
 
-  // Animation
   weeks_before_enter: styles.weeksBeforeEnter,
   weeks_before_exit: styles.weeksBeforeExit,
   weeks_after_enter: styles.weeksAfterEnter,
@@ -119,7 +115,7 @@ function Calendar({ formatters, ...props }: CalendarProps) {
       }}
       classNames={classNames}
       components={{
-        Chevron: ({ className, orientation, ...props }) => {
+        Chevron: ({ className, orientation, ...chevronProps }) => {
           const effectiveOrientation =
             dir === 'rtl' && orientation === 'left'
               ? 'right'
@@ -128,14 +124,14 @@ function Calendar({ formatters, ...props }: CalendarProps) {
                 : orientation
 
           if (effectiveOrientation === 'left') {
-            return <ChevronLeftIcon size="1rem" className={className} {...props} />
+            return <ChevronLeftIcon size="1rem" className={className} {...chevronProps} />
           }
 
           if (effectiveOrientation === 'right') {
-            return <ChevronRightIcon size="1rem" className={className} {...props} />
+            return <ChevronRightIcon size="1rem" className={className} {...chevronProps} />
           }
 
-          return <ChevronDownIcon size="1rem" className={className} {...props} />
+          return <ChevronDownIcon size="1rem" className={className} {...chevronProps} />
         },
         Dropdown: CalendarDropdown,
         ...props.components,

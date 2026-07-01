@@ -1,4 +1,4 @@
-'use no memo' // TanStack Table doesn't support the React Compiler yet
+'use no memo'
 
 import { Input } from '@/components/ui/Input/Input'
 import {
@@ -60,7 +60,6 @@ function DataTableRoot<TData, TValue>({
     [providedColumns, renderDetailPanel],
   )
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     columns,
     data,
@@ -165,5 +164,4 @@ export { DataTableHeader } from './DataTableHeader'
 export type { RenderDetailPanel } from './types'
 export { DataTableContent, DataTableRoot, DataTableSearch }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { selectColumnDef } from './selectColumnDef'

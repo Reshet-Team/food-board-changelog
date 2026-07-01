@@ -44,12 +44,12 @@ function DatePicker(props: DatePickerProps) {
       ? { from: props.value ?? undefined }
       : { from: props.value?.start, to: props.value?.end }
 
-  const handleCalendarSelect = (selected: Date | DateRange | undefined) => {
+  const handleCalendarSelect = (selection: Date | DateRange | undefined) => {
     const from =
       mode === 'single'
-        ? ((selected as Date | undefined) ?? null)
-        : ((selected as DateRange | undefined)?.from ?? null)
-    const to = mode === 'range' ? ((selected as DateRange | undefined)?.to ?? null) : null
+        ? ((selection as Date | undefined) ?? null)
+        : ((selection as DateRange | undefined)?.from ?? null)
+    const to = mode === 'range' ? ((selection as DateRange | undefined)?.to ?? null) : null
 
     if (from) setMonth(from)
 

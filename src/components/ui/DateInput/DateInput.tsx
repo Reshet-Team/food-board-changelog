@@ -16,8 +16,6 @@ import {
 } from 'react-stately'
 import styles from './DateInput.module.scss'
 
-// ─── Segment ────────────────────────────────────────────────────────────────
-
 function Segment({ segment, state }: { segment: DateSegment; state: DateFieldState }) {
   const ref = useRef<HTMLSpanElement>(null)
   const { segmentProps } = useDateSegment(segment, state, ref)
@@ -51,7 +49,6 @@ function Segment({ segment, state }: { segment: DateSegment; state: DateFieldSta
     segmentProps.onBlur?.(e as React.FocusEvent<HTMLDivElement>)
   }
 
-  // Show "." between segments instead of the locale's default "/".
   const displayText = segment.type === 'literal' ? segment.text.replace('/', '.') : segment.text
 
   return (
@@ -70,8 +67,6 @@ function Segment({ segment, state }: { segment: DateSegment; state: DateFieldSta
   )
 }
 
-// ─── Single field ────────────────────────────────────────────────────────────
-
 type SingleFieldProps = AriaDateFieldProps<CalendarDate> & {
   className?: string
   iconSpacing?: boolean
@@ -81,7 +76,7 @@ type SingleFieldProps = AriaDateFieldProps<CalendarDate> & {
 function SingleField({
   className,
   iconSpacing,
-  // Pin to a day-first locale so segments always read day/month/year.
+
   locale = 'en-GB',
   ...props
 }: SingleFieldProps) {
@@ -104,8 +99,6 @@ function SingleField({
   )
 }
 
-// ─── Range field ─────────────────────────────────────────────────────────────
-
 type RangeFieldProps = AriaDateRangePickerProps<DateValue> & {
   className?: string
   iconSpacing?: boolean
@@ -115,7 +108,7 @@ type RangeFieldProps = AriaDateRangePickerProps<DateValue> & {
 function RangeField({
   className,
   iconSpacing,
-  // Pin to a day-first locale so segments always read day/month/year.
+
   locale = 'en-GB',
   ...props
 }: RangeFieldProps) {
@@ -183,12 +176,10 @@ function RangeField({
   )
 }
 
-// ─── Range inline field ───────────────────────────────────────────────────────
-
 function RangeInlineField({
   className,
   iconSpacing,
-  // Pin to a day-first locale so segments always read day/month/year.
+
   locale = 'en-GB',
   ...props
 }: RangeFieldProps) {
@@ -250,8 +241,6 @@ function RangeInlineField({
     </div>
   )
 }
-
-// ─── Public API ──────────────────────────────────────────────────────────────
 
 type DateInputSingleProps = SingleFieldProps & { mode?: 'single' }
 type DateInputRangeProps = RangeFieldProps & { mode: 'range' }

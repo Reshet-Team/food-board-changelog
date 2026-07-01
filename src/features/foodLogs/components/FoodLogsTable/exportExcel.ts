@@ -3,8 +3,6 @@ import { changeTypeLabel } from '@/features/foodLogs/utils/changeType'
 import { formatDateShort, formatTimeShort } from '@/utils/date'
 import * as XLSX from 'xlsx'
 
-// ─── Excel export ────────────────────────────────────────────────────────────
-// Column labels for the exported sheet, kept in step with the table.
 const EXCEL_HEADERS = [
   'תאריך שינוי',
   'שעת שינוי',
@@ -19,7 +17,6 @@ const EXCEL_HEADERS = [
   'ערך חדש',
 ]
 
-/** Builds a real .xlsx workbook from the current rows and downloads it. */
 export function exportExcel(rows: FoodLog[]): void {
   const body = rows.map((row) => [
     formatDateShort(row.changeDate),

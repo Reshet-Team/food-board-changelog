@@ -1,9 +1,5 @@
 import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 
-// ─── Mock alternatives ────────────────────────────────────────────────────────
-// Served when no SAP backend is configured. Type values 4 & 6 are "daily" and
-// require a consumption date; all other types (e.g. 3 & 5, "monthly") can't have
-// one.
 const MOCK_ALTERNATIVES: AlternativeOption[] = [
   { value: '01', typeValue: '1', typeDescription: 'רגילה' },
   { value: '02', typeValue: '1', typeDescription: 'רגילה' },
@@ -13,19 +9,15 @@ const MOCK_ALTERNATIVES: AlternativeOption[] = [
   { value: '06', typeValue: '6', typeDescription: 'יומית' },
 ]
 
-// Fetches the global list of alternative options for the search dropdown.
 export async function fetchAlternatives(): Promise<AlternativeOption[]> {
-  // Mock mode (VITE_USE_MOCK_DATA=true) or no SAP backend configured.
   if (import.meta.env.VITE_USE_MOCK_DATA === 'true' || !import.meta.env.VITE_SAP_API_BASE_URL) {
-    await new Promise((resolve) => setTimeout(resolve, 300)) // simulate latency
+    await new Promise((resolve) => setTimeout(resolve, 300))
     return MOCK_ALTERNATIVES
   }
 
-  // Runs once when the screen opens: GET <base URL>/alternative.
   const baseUrl = import.meta.env.VITE_SAP_API_BASE_URL.replace(/\/+$/, '')
   const url = new URL(`${baseUrl}/alternative`)
 
-  // Basic Auth — credentials loaded from env vars, never hardcoded
   const credentials = btoa(
     `${import.meta.env.VITE_SAP_USERNAME}:${import.meta.env.VITE_SAP_PASSWORD}`,
   )

@@ -7,7 +7,6 @@
     background-color: var(--color-bg-subtle);
   }
 
-  // ─── App header (title only) ────────────────────────────────────────────────
   .appHeader {
     display: flex;
     align-items: center;
@@ -31,7 +30,6 @@
     object-fit: contain;
   }
 
-  // ─── Body: table (start/right) + filter sidebar (end/left) ──────────────────
   .body {
     flex: 1;
     min-height: 0;
@@ -55,7 +53,6 @@
     background: var(--color-bg);
     border-inline-start: 1px solid var(--color-border);
 
-    // Slides in from the inline-end edge when toggled on.
     @starting-style {
       opacity: 0;
       transform: translateX(8px);

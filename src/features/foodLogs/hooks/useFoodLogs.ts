@@ -6,7 +6,7 @@ export const foodLogsKeys = {
   all: () => ['foodLogs'] as const,
   search: (filter: FoodLogsFilter) => [...foodLogsKeys.all(), filter] as const,
 }
-// אופיר היה כאן
+
 export function useFoodLogs(filter: FoodLogsFilter | null) {
   return useQuery({
     queryKey: foodLogsKeys.search(filter!),
@@ -14,8 +14,7 @@ export function useFoodLogs(filter: FoodLogsFilter | null) {
     enabled: filter !== null,
     staleTime: 5 * 60 * 1000,
     retry: 1,
-    // Shown by the global query error handler (see lib/queryClient.ts) whenever
-    // this fetch fails — no per-component effect needed.
+
     meta: {
       errorToast: {
         title: 'שגיאה בטעינת הנתונים',

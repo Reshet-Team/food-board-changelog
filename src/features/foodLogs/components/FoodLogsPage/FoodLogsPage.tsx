@@ -17,16 +17,9 @@ import styles from './FoodLogsPage.module.scss'
 export function FoodLogsPage() {
   const search = useAtomValue(foodLogsFilterAtom)
   const [filtersOpen, setFiltersOpen] = useState(true)
-  // Local change-type filter, applied to the rows after they arrive from SAP.
-  // Defaults to every category selected (shows everything).
+
   const [changeTypes, setChangeTypes] = useState<ChangeType[]>(ALL_CHANGE_TYPES)
 
-  // Only pass a filter to the query when the mandatory fields are filled.
-  // Before first submit (foodBoard/alternative are empty strings), filter is null
-  // and the query stays idle.
-  // With exactOptionalPropertyTypes, we must omit optional properties
-  // rather than assigning them as `undefined`
-  //
   const filter: FoodLogsFilter | null =
     search.foodBoard && search.alternative
       ? {
@@ -48,17 +41,11 @@ export function FoodLogsPage() {
   const { data, isLoading, isError, isFetching, refetch } = useFoodLogs(filter)
   const rows = data ?? []
 
-  // Apply the local change-type filter before the table sees the data. When all
-  // categories are selected the original list (including its loading/undefined
-  // state) is passed through untouched.
   const displayedData =
     data && changeTypes.length < ALL_CHANGE_TYPES.length
       ? data.filter((row) => matchesChangeTypes(row.typeOfChange, changeTypes))
       : data
 
-  // While the table has no rows to show, the filter panel stays open and the
-  // toggle is locked — there's nothing to reveal by closing it, and the user
-  // still needs the form to run a search.
   const hasData = rows.length > 0
   const filtersVisible = filtersOpen || !hasData
 

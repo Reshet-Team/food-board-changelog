@@ -1,4 +1,4 @@
-'use no memo' // TanStack Table doesn't support the React Compiler yet
+'use no memo'
 
 import { Button } from '@/components/ui/Button/Button'
 import {
@@ -21,17 +21,16 @@ import { FileSearch, RotateCw, TriangleAlert } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import styles from './FoodLogsTable.module.scss'
 
-// Number of skeleton rows to show while a fetch is in flight.
 const LOADING_ROWS = 12
 
 export interface FoodLogsTableProps {
   data: FoodLog[] | undefined
   isLoading: boolean
   isError: boolean
-  /** Whether a search has been submitted (mandatory fields filled). */
+
   hasSearched: boolean
   onRetry: () => void
-  /** Rendered in the toolbar, between the search box and the Excel export. */
+
   filtersSlot?: ReactNode
 }
 
@@ -45,7 +44,6 @@ export function FoodLogsTable({
 }: FoodLogsTableProps) {
   const rows = useMemo(() => data ?? [], [data])
 
-  // ─── Idle — no search submitted yet ────────────────────────────────────────
   if (!hasSearched) {
     return (
       <div className={styles.stateCard}>
@@ -62,7 +60,6 @@ export function FoodLogsTable({
     )
   }
 
-  // ─── Error ─────────────────────────────────────────────────────────────────
   if (isError) {
     return (
       <div className={styles.stateCard}>
@@ -83,7 +80,6 @@ export function FoodLogsTable({
     )
   }
 
-  // ─── Empty — successful fetch, zero rows ───────────────────────────────────
   if (!isLoading && data && data.length === 0) {
     return (
       <div className={styles.stateCard}>
@@ -100,7 +96,6 @@ export function FoodLogsTable({
     )
   }
 
-  // ─── Loading / Success ─────────────────────────────────────────────────────
   return (
     <div className={styles.tableArea}>
       <DataTableRoot

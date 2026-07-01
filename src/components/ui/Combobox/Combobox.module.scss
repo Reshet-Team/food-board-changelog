@@ -33,7 +33,6 @@
       font-size: var(--font-size-lg);
     }
 
-    // Auto-height for multi-select chip layouts
     &:has(.chips) {
       height: auto;
       min-height: var(--control-height-md);

@@ -9,7 +9,7 @@ export default {
   Group: BaseCombobox.Group,
   Value: BaseCombobox.Value,
   Label: styled(BaseCombobox.Label, styles.label),
-  /** The InputGroup container (styled). Use `ComboboxInput` composite for common layouts. */
+
   InputGroupRoot: styled(BaseCombobox.InputGroup, styles.inputGroup),
   Input: styled(BaseCombobox.Input, styles.input),
   Trigger: styled(BaseCombobox.Trigger, styles.trigger),

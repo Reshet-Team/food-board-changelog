@@ -87,9 +87,6 @@
     gap: 0.5rem;
   }
 
-  // .dropdown and .dropdownRoot are no longer used — the Dropdown component is
-  // overridden with the project Select, which brings its own trigger styling.
-
   .monthCaption {
     display: flex;
     align-items: center;
@@ -396,4 +393,4 @@
   .captionBeforeExit {
     animation: rdp-fade-out var(--rdp-animation-duration) var(--rdp-animation-timing) forwards;
   }
-} // @layer components
+}

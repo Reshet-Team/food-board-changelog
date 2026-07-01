@@ -1,6 +1,4 @@
 @layer components {
-  // The whole filter sidebar: a full-height column with a fixed header, a
-  // scrollable field area, and the apply button pinned to the bottom.
   .panel {
     display: flex;
     flex-direction: column;
@@ -30,9 +28,6 @@
     }
   }
 
-  // Region holding the search fields and the change-type filter. Takes the
-  // remaining height between the header and the pinned footer and grows with
-  // its content instead of scrolling.
   .scrollArea {
     flex: 1;
     display: flex;
@@ -41,14 +36,12 @@
     padding: var(--space-4);
   }
 
-  // The fields stack vertically, one per row.
   .form {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
   }
 
-  // Forces the single DatePicker to fill its cell.
   .dateFieldWrapper > div {
     width: 100%;
   }
@@ -57,8 +50,6 @@
     flex: 1;
   }
 
-  // Greyed-out state for a date field that doesn't apply to the chosen
-  // alternative. `inert` on the element blocks interaction; this just dims it.
   .disabledField {
     opacity: 0.5;
     cursor: not-allowed;
@@ -70,8 +61,6 @@
     line-height: var(--line-height-normal);
   }
 
-  // Multi-value chips input: a wrapped list of removable tokens above the entry
-  // field.
   .chipsField {
     display: flex;
     flex-direction: column;
@@ -115,9 +104,6 @@
     }
   }
 
-  // Pinned to the foot of the panel so the apply action stays reachable while
-  // the fields above scroll. Sits below the scrollable area, which takes the
-  // remaining height via `flex: 1`.
   .footer {
     padding: var(--space-4);
     background: var(--color-bg);
@@ -128,10 +114,6 @@
     width: 100%;
   }
 
-  // ─── Change-type local filter ─────────────────────────────────────────
-  // The checkboxes filter the already-fetched results by change action rather
-  // than feeding the SAP request. Kept on a single wrapping row (label beside
-  // the boxes) to save vertical space.
   .changeTypeFilter {
     display: flex;
     align-items: center;

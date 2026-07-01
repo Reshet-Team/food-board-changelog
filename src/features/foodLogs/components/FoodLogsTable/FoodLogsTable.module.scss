@@ -1,6 +1,4 @@
 @layer components {
-  // Card shown for the idle / error / empty states. Fills the main area and
-  // centres its message.
   .stateCard {
     flex: 1;
     min-height: 0;
@@ -14,9 +12,6 @@
     padding: var(--space-6);
   }
 
-  // The table card: an export toolbar above a body that scrolls in both
-  // directions (vertical for all rows, horizontal so wide content is never
-  // cropped when the filter sidebar narrows the area).
   .tableArea {
     flex: 1;
     min-height: 0;
@@ -29,7 +24,6 @@
     overflow: hidden;
   }
 
-  // Small toolbar above the table holding the row count and the Excel export.
   .tableToolbar {
     display: flex;
     align-items: center;
@@ -39,13 +33,11 @@
     border-block-end: 1px solid var(--color-border);
   }
 
-  // Search box + filters slot + Excel export, grouped at the end of the toolbar.
   .toolbarControls {
     display: flex;
     gap: var(--space-4);
   }
 
-  // Row count, shown at the start (right in RTL) of the table toolbar.
   .count {
     font-size: var(--font-size-sm);
     color: var(--color-fg-muted);
@@ -56,45 +48,33 @@
     }
   }
 
-  // Global search box, centred in the toolbar between the count and export.
   .searchInput {
     flex: 0 1 18rem;
     min-width: 20rem;
     margin-inline: auto;
   }
 
-  // Wrapper passed to the DataTable — flexes to fill the remaining height and
-  // makes its inner scroll container scroll in both directions.
   .tableWrapper {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
 
-    // The outer DataTable container owns both scroll axes (the toolbar above it
-    // keeps its natural height and is excluded here).
     > div:not(.tableToolbar) {
       flex: 1;
       min-height: 0;
       overflow: auto;
 
-      // Force LTR on the scroll container so the vertical scrollbar sits on the
-      // right edge; the inner content is switched back to RTL below.
       direction: ltr;
 
-      // Inset the rows from the card border so their rounded backgrounds never
-      // sit flush against the edge of the table card.
       padding-inline: var(--space-4);
 
-      // …so the inner table primitive must not trap horizontal scroll below
-      // the fold with its own overflow.
       > div {
         direction: rtl;
         overflow: visible;
       }
     }
 
-    // Pin the header so it stays visible while the body scrolls vertically.
     :global(thead th) {
       position: sticky;
       top: 0;
@@ -102,13 +82,6 @@
       background: var(--color-bg);
     }
 
-    // ─── Responsive columns ───────────────────────────────────────────────────
-    // The shared DataTable gives every column a fixed pixel width, so the table
-    // grows wider than its container once the filter panel opens or the viewport
-    // narrows — forcing a horizontal scroll. A fixed layout with proportional
-    // widths instead lets each column scale with the available space, so the
-    // table always fits, and overlong values truncate with an ellipsis rather
-    // than pushing the layout wider.
     table {
       table-layout: fixed;
       width: 100%;
@@ -116,22 +89,14 @@
 
     th,
     td {
-      // Contain each column so long values never bleed into the next one. The
-      // per-cell `TextCell` decides whether to truncate (single token) or wrap
-      // (multi-word) — see the `.truncate` / `.wrap` rules below.
       overflow: hidden;
       text-align: center;
     }
 
-    // Centre each header label over the middle of its column. `th > div` is the
-    // ColumnHeader wrapper, so centring it centres the sort button.
     th > div {
       justify-content: center;
     }
 
-    // Proportional column widths (sum = 100%). `!important` is required to beat
-    // the inline pixel width the DataTable sets on each cell. If a column is
-    // added or removed, rebalance these so they still total 100%.
     [data-column-id='valueChange'] {
       width: 16% !important;
     }
@@ -158,7 +123,6 @@
     }
   }
 
-  // ─── Change-type badge ──────────────────────────────────────────────────────
   .badge {
     display: inline-flex;
     align-items: center;
@@ -185,9 +149,6 @@
     color: var(--color-danger);
   }
 
-  // ─── Cell text overflow ─────────────────────────────────────────────────────
-  // A single long token (material number, username) is clipped on one line with
-  // an ellipsis; the full value is available via the cell's `title` tooltip.
   .truncate {
     display: block;
     max-width: 100%;
@@ -196,8 +157,6 @@
     text-overflow: ellipsis;
   }
 
-  // A value containing a space wraps onto the next line, breaking only between
-  // words — never mid-word.
   .wrap {
     display: block;
     max-width: 100%;
@@ -206,9 +165,6 @@
     word-break: keep-all;
   }
 
-  // ─── Value change (old → new) ───────────────────────────────────────────────
-  // Old and new values sit side by side with an arrow between them, wrapping
-  // onto a new line only when the pair is too wide for the column.
   .valueChange {
     display: flex;
     flex-wrap: wrap;
@@ -221,8 +177,6 @@
     text-align: center;
   }
 
-  // Each value reuses the cell truncate/wrap rules, so a long number ellipsizes
-  // while free text wraps.
   .oldValue,
   .newValue {
     min-width: 0;
