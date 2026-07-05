@@ -114,7 +114,18 @@ export function FoodLogsSearchForm({
           components={{ string: StringInput }}
           fields={{
             foodBoard: { label: 'לוח מזון', component: NumericInput },
-            alternative: { label: 'חלופה', component: AlternativeSelect },
+            alternative: {
+              label: 'חלופה',
+              component: AlternativeSelect,
+              onChange: (value, formMethods) => {
+                if (!isDailyAlternative((value as string | undefined) ?? '', alternatives ?? [])) {
+                  formMethods.setValues({
+                    consumptionDateFrom: undefined,
+                    consumptionDateTo: undefined,
+                  })
+                }
+              },
+            },
             dateFrom: { label: 'טווח תאריכי שינוי', component: DateRangeFieldPicker },
             dateTo: { hidden: true },
             material: { label: 'חומר', component: MaterialChipsInput },
@@ -127,19 +138,7 @@ export function FoodLogsSearchForm({
           }}
           layout={{ submitButton: null }}
           classNames={{ form: styles.form! }}
-          onValuesChange={(vals) => {
-            setValues(vals)
-
-            if (
-              !isDailyAlternative(vals.alternative, alternatives ?? []) &&
-              (vals.consumptionDateFrom || vals.consumptionDateTo)
-            ) {
-              formRef.current?.setValues({
-                consumptionDateFrom: undefined,
-                consumptionDateTo: undefined,
-              })
-            }
-          }}
+          onValuesChange={setValues}
         />
 
         <div className={styles.changeTypeFilter}>
