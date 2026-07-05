@@ -22,7 +22,9 @@ export interface FoodLog {
   typeOfChange: string
   material: string
   quantity: number
-  consumptionDate?: Date
+  consumptionDateFrom?: Date
+  consumptionDateTo?: Date
+  firstDayInPeriod?: Date
   dayInPeriod?: number
   changeDate: Date
   changedBy: string
@@ -35,7 +37,9 @@ export interface RawFoodLog {
   typeOfChange: string
   material: string
   quantity: number
-  consumptionDate?: string
+  consumptionDateFrom?: string
+  consumptionDateTo?: string
+  firstDay?: string
   dayInPeriod?: number
   changeDate: string
   changeTime: string

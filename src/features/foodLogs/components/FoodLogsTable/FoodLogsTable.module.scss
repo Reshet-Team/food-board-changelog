@@ -83,7 +83,7 @@
     }
 
     table {
-      table-layout: fixed;
+      table-layout: auto;
       width: 100%;
     }
 
@@ -91,35 +91,11 @@
     td {
       overflow: hidden;
       text-align: center;
+      white-space: normal;
     }
 
     th > div {
       justify-content: center;
-    }
-
-    [data-column-id='valueChange'] {
-      width: 16% !important;
-    }
-
-    [data-column-id='typeOfChange'] {
-      width: 11% !important;
-    }
-
-    [data-column-id='material'],
-    [data-column-id='field'],
-    [data-column-id='consumptionDate'],
-    [data-column-id='changeDate'] {
-      width: 10% !important;
-    }
-
-    [data-column-id='changeTime'],
-    [data-column-id='dayInPeriod'],
-    [data-column-id='changedBy'] {
-      width: 9% !important;
-    }
-
-    [data-column-id='quantity'] {
-      width: 6% !important;
     }
   }
 
@@ -147,6 +123,22 @@
   .badge[data-tone='delete'] {
     background: color-mix(in srgb, var(--color-danger) 16%, var(--color-bg));
     color: var(--color-danger);
+  }
+
+  .dateRange {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1px 4px;
+    direction: ltr;
+    line-height: var(--line-height-tight);
+  }
+
+  .dateRangeTo {
+    &::before {
+      content: '– ';
+    }
   }
 
   .truncate {

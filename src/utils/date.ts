@@ -44,6 +44,12 @@ export function formatDateShort(date: Date | undefined): string {
   return `${day}.${month}.${date.getFullYear()}`
 }
 
+export function formatDateRange(from: Date | undefined, to: Date | undefined): string {
+  if (from == null) return formatDateShort(to)
+  if (to == null) return formatDateShort(from)
+  return `${formatDateShort(from)} - ${formatDateShort(to)}`
+}
+
 export function formatTimeShort(date: Date | undefined): string {
   if (date == null) return ''
   const hours = String(date.getHours()).padStart(2, '0')

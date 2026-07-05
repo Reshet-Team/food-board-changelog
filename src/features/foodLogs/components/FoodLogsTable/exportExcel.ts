@@ -1,6 +1,6 @@
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { changeTypeLabel } from '@/features/foodLogs/utils/changeType'
-import { formatDateShort, formatTimeShort } from '@/utils/date'
+import { formatDateRange, formatDateShort, formatTimeShort } from '@/utils/date'
 import * as XLSX from 'xlsx'
 
 const EXCEL_HEADERS = [
@@ -10,6 +10,7 @@ const EXCEL_HEADERS = [
   'חומר',
   'כמות',
   'תאריך צריכה',
+  'יום ראשון בתקופה',
   'יום בתקופה',
   'שונה ע"י',
   'שדה',
@@ -24,7 +25,8 @@ export function exportExcel(rows: FoodLog[]): void {
     changeTypeLabel(row.typeOfChange),
     row.material,
     row.quantity,
-    formatDateShort(row.consumptionDate),
+    formatDateRange(row.consumptionDateFrom, row.consumptionDateTo),
+    formatDateShort(row.firstDayInPeriod),
     row.dayInPeriod ?? '',
     row.changedBy,
     row.field,

@@ -8,7 +8,7 @@ const FIELDS = ['כמות', 'תאריך צריכה', 'יום בתקופה', 'ח�
 const USERS = ['DCOHEN', 'MLEVI', 'YBARAK', 'RSHARON']
 
 function padMaterial(value: number): string {
-  return String(value).padStart(18, '0')
+  return String(10000000 + value)
 }
 
 function sapDate(dayOffset: number): string {
@@ -58,6 +58,7 @@ function buildFoodLog(index: number): RawFoodLog {
   const newValue = category === 'delete' ? '' : values.newValue
 
   const hasPeriodInfo = index % 4 !== 0
+  const hasRange = index % 3 === 0
   return {
     typeOfChange,
     material: padMaterial(1234 + index),
@@ -69,7 +70,9 @@ function buildFoodLog(index: number): RawFoodLog {
     oldValue,
     newValue,
     ...(hasPeriodInfo && {
-      consumptionDate: sapDate(dayOffset - 1),
+      consumptionDateFrom: sapDate(dayOffset - 1),
+      ...(hasRange ? { consumptionDateTo: sapDate(dayOffset - 1 + 4) } : {}),
+      firstDay: sapDate(dayOffset - (index % 30)),
       dayInPeriod: (index % 30) + 1,
     }),
   }
@@ -116,8 +119,8 @@ export function filterMockFoodLogs(filter: FoodLogsFilter): FoodLog[] {
       if (!matches) return false
     }
 
-    if (from && (log.consumptionDate == null || log.consumptionDate < from)) return false
-    if (to && (log.consumptionDate == null || log.consumptionDate > to)) return false
+    if (from && (log.consumptionDateFrom == null || log.consumptionDateFrom < from)) return false
+    if (to && (log.consumptionDateFrom == null || log.consumptionDateFrom > to)) return false
 
     return true
   }).map((row) => toFoodLog(row.log))
