@@ -5,6 +5,7 @@ import { toSapDate } from '@/utils/date'
 
 const TYPES_OF_CHANGE = ['I', 'U', 'D', 'E', 'J']
 const FIELDS = ['כמות', 'תאריך צריכה', 'יום בתקופה', 'חומר']
+const UPDATE_FIELDS = ['כמות', 'חומר']
 const USERS = ['DCOHEN', 'MLEVI', 'YBARAK', 'RSHARON']
 
 function padMaterial(value: number): string {
@@ -49,9 +50,10 @@ function valuesForField(field: string, index: number): { oldValue: string; newVa
 
 function buildFoodLog(index: number): RawFoodLog {
   const dayOffset = -index
-  const field = FIELDS[index % FIELDS.length]!
   const typeOfChange = TYPES_OF_CHANGE[index % TYPES_OF_CHANGE.length]!
   const category = classifyChangeType(typeOfChange)
+  const fieldPool = category === 'update' ? UPDATE_FIELDS : FIELDS
+  const field = fieldPool[index % fieldPool.length]!
   const values = valuesForField(field, index)
 
   const oldValue = category === 'add' ? '' : values.oldValue

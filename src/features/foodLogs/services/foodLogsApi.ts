@@ -14,24 +14,30 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
 
   const { dateFrom, dateTo, consumptionDateFrom, consumptionDateTo, material, changedBy, ...rest } =
     filter
-  Object.entries(rest).forEach(([key, value]) => {
-    if (value) url.searchParams.set(key, value)
-  })
-  if (material?.length) url.searchParams.set('material', material.join(','))
-  if (changedBy?.length) url.searchParams.set('changedBy', changedBy.join(','))
-  url.searchParams.set('dateFrom', toSapDate(dateFrom))
-  url.searchParams.set('dateTo', toSapDate(dateTo))
-  if (consumptionDateFrom)
-    url.searchParams.set('consumptionDateFrom', toSapDate(consumptionDateFrom))
-  if (consumptionDateTo) url.searchParams.set('consumptionDateTo', toSapDate(consumptionDateTo))
+
+  const body: Record<string, unknown> = { ...rest }
+  body.dateFrom = toSapDate(dateFrom)
+  body.dateTo = toSapDate(dateTo)
+
+  if (material?.length) body.material = material
+  if (changedBy?.length) body.changedBy = changedBy
+
+  if (consumptionDateFrom) {
+    body.consumptionDateFrom = toSapDate(consumptionDateFrom)
+    if (consumptionDateTo) body.consumptionDateTo = toSapDate(consumptionDateTo)
+  }
 
   const credentials = btoa(
     `${import.meta.env.VITE_SAP_USERNAME}:${import.meta.env.VITE_SAP_PASSWORD}`,
   )
 
   const response = await fetch(url, {
-    method: 'GET',
-    headers: { Authorization: `Basic ${credentials}` },
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) throw new Error(`SAP error: ${response.status}`)
