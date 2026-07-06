@@ -11,7 +11,7 @@ import {
 } from '@/features/foodLogs/utils/changeType'
 import { useAtomValue } from 'jotai'
 import { SlidersHorizontal } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import styles from './FoodLogsPage.module.scss'
 
 export function FoodLogsPage() {
@@ -27,26 +27,21 @@ export function FoodLogsPage() {
           alternative: search.alternative,
           dateFrom: search.dateFrom,
           dateTo: search.dateTo,
-          ...(search.material?.length ? { material: search.material } : {}),
-          ...(search.consumptionDateFrom !== undefined && {
-            consumptionDateFrom: search.consumptionDateFrom,
-          }),
-          ...(search.consumptionDateTo !== undefined && {
-            consumptionDateTo: search.consumptionDateTo,
-          }),
-          ...(search.changedBy?.length ? { changedBy: search.changedBy } : {}),
+          ...(search.material?.length && { material: search.material }),
+          ...(search.consumptionDateFrom && { consumptionDateFrom: search.consumptionDateFrom }),
+          ...(search.consumptionDateTo && { consumptionDateTo: search.consumptionDateTo }),
+          ...(search.changedBy?.length && { changedBy: search.changedBy }),
         }
       : null
 
   const { data, isLoading, isError, isFetching, refetch } = useFoodLogs(filter)
-  const rows = data ?? []
 
-  const displayedData =
-    data && changeTypes.length < ALL_CHANGE_TYPES.length
-      ? data.filter((row) => matchesChangeTypes(row.typeOfChange, changeTypes))
-      : data
+  const displayedData = useMemo(() => {
+    if (!data || changeTypes.length >= ALL_CHANGE_TYPES.length) return data
+    return data.filter((row) => matchesChangeTypes(row.typeOfChange, changeTypes))
+  }, [data, changeTypes])
 
-  const hasData = rows.length > 0
+  const hasData = (displayedData?.length ?? 0) > 0
   const filtersVisible = filtersOpen || !hasData
 
   const filtersButton = (
@@ -84,7 +79,7 @@ export function FoodLogsPage() {
           />
         </main>
 
-        {filtersVisible && (
+        {filtersVisible ? (
           <aside className={styles.sidebar}>
             <FoodLogsSearchForm
               defaultValues={search}
@@ -93,7 +88,7 @@ export function FoodLogsPage() {
               onChangeTypesChange={setChangeTypes}
             />
           </aside>
-        )}
+        ) : null}
       </div>
     </div>
   )

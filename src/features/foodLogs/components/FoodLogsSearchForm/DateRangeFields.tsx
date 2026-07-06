@@ -7,54 +7,64 @@ import { useWatch } from 'react-hook-form'
 import styles from './FoodLogsSearchForm.module.scss'
 import { isDailyAlternative } from './searchRules'
 
-export function DateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
+type RangeToField = 'dateTo' | 'consumptionDateTo'
+
+interface RangeDatePickerProps extends FieldProps {
+  toFieldName: RangeToField
+  emptyValue?: Date | null | undefined
+  disabled?: boolean
+  blurOnComplete?: boolean
+}
+
+function RangeDatePicker({
+  value,
+  onChange,
+  onBlur,
+  toFieldName,
+  emptyValue = null,
+  disabled = false,
+  blurOnComplete = false,
+}: RangeDatePickerProps) {
   const { control, formMethods } = useAutoFormContext()
   const start = (value as Date | undefined) ?? null
-
-  const end = (useWatch({ control, name: 'dateTo' }) as Date | undefined) ?? null
+  const end = (useWatch({ control, name: toFieldName }) as Date | undefined) ?? null
   const range = start && end ? { start, end } : null
 
   return (
-    <div className={styles.dateFieldWrapper}>
+    <div
+      className={clsx(styles.dateFieldWrapper, disabled && styles.disabledField)}
+      inert={disabled || undefined}
+    >
       <DatePicker
         mode="range"
         value={range}
         onChange={(next) => {
-          onChange(next?.start ?? null)
-          formMethods.setValue('dateTo', next?.end ?? null)
-          if (next) onBlur()
+          onChange(next?.start ?? emptyValue)
+          formMethods.setValue(toFieldName, next?.end ?? emptyValue)
+          if (!blurOnComplete || next) onBlur()
         }}
       />
     </div>
   )
 }
 
-export function ConsumptionDateRangeFieldPicker({ value, onChange, onBlur }: FieldProps) {
-  const { control, formMethods } = useAutoFormContext()
+export function DateRangeFieldPicker(props: FieldProps) {
+  return <RangeDatePicker {...props} toFieldName="dateTo" emptyValue={null} blurOnComplete />
+}
+
+export function ConsumptionDateRangeFieldPicker(props: FieldProps) {
+  const { control } = useAutoFormContext()
   const { data: alternatives } = useAlternatives()
 
   const alternative = useWatch({ control, name: 'alternative' }) as string | undefined
   const consumptionEnabled = isDailyAlternative(alternative ?? '', alternatives ?? [])
 
-  const start = (value as Date | undefined) ?? null
-
-  const end = (useWatch({ control, name: 'consumptionDateTo' }) as Date | undefined) ?? null
-  const range = start && end ? { start, end } : null
-
   return (
-    <div
-      className={clsx(styles.dateFieldWrapper, !consumptionEnabled && styles.disabledField)}
-      inert={!consumptionEnabled || undefined}
-    >
-      <DatePicker
-        mode="range"
-        value={range}
-        onChange={(next) => {
-          onChange(next?.start ?? undefined)
-          formMethods.setValue('consumptionDateTo', next?.end ?? undefined)
-          onBlur()
-        }}
-      />
-    </div>
+    <RangeDatePicker
+      {...props}
+      toFieldName="consumptionDateTo"
+      emptyValue={undefined}
+      disabled={!consumptionEnabled}
+    />
   )
 }

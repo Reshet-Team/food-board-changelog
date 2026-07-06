@@ -2,12 +2,16 @@ import { Button } from '@/components/ui/Button/Button'
 import { Checkbox } from '@/components/ui/Checkbox/Checkbox'
 import { Spinner } from '@/components/ui/Spinner/Spinner'
 import {
-  AlternativeSelect,
   ChangedByChipsInput,
+  MaterialChipsInput,
+} from '@/features/foodLogs/components/FoodLogsSearchForm/ChipsInput'
+import {
   ConsumptionDateRangeFieldPicker,
   DateRangeFieldPicker,
+} from '@/features/foodLogs/components/FoodLogsSearchForm/DateRangeFields'
+import {
+  AlternativeSelect,
   FormFieldWrapper,
-  MaterialChipsInput,
   NumericInput,
   StringInput,
 } from '@/features/foodLogs/components/FoodLogsSearchForm/SearchFormFields'
