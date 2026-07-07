@@ -14,8 +14,8 @@ export interface FoodLogsFilter {
 
 export interface AlternativeOption {
   value: string
-  typeValue: string
-  typeDescription: string
+  type: string
+  description: string
 }
 
 export interface FoodLog {

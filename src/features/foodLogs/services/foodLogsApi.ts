@@ -1,14 +1,8 @@
 import type { FoodLog, FoodLogsFilter, RawFoodLog } from '@/features/foodLogs/types/foodLog'
 import { toFoodLog } from '@/features/foodLogs/utils/parseFoodLog'
 import { toSapDate } from '@/utils/date'
-import { filterMockFoodLogs } from './mockFoodLogs'
 
 export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]> {
-  if (import.meta.env.VITE_USE_MOCK_DATA === 'true' || !import.meta.env.VITE_SAP_API_BASE_URL) {
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    return filterMockFoodLogs(filter)
-  }
-
   const baseUrl = import.meta.env.VITE_SAP_API_BASE_URL.replace(/\/+$/, '')
   const url = new URL(`${baseUrl}/food-logs`)
 

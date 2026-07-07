@@ -89,7 +89,7 @@ export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
   const options = alternatives ?? []
   const current = (value as string | undefined) ?? ''
 
-  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.typeDescription}`
+  const formatOption = (option: AlternativeOption) => `${option.value} — ${option.description}`
 
   const selectedOption = options.find((option) => option.value === current) ?? null
 

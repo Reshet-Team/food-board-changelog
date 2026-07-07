@@ -7,7 +7,7 @@ export function isDailyAlternative(
   options: AlternativeOption[],
 ): boolean {
   const selected = options.find((option) => option.value === alternativeValue)
-  return selected ? DAILY_TYPE_VALUES.has(Number(selected.typeValue)) : false
+  return selected ? DAILY_TYPE_VALUES.has(Number(selected.type)) : false
 }
 
 export function validateDateRange(from?: Date | null, to?: Date | null): string | null {
