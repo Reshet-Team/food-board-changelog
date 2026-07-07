@@ -33,7 +33,7 @@ export function FoodLogsTableToolbar({ filtersSlot }: FoodLogsTableToolbarProps)
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
             table.setGlobalFilter(event.currentTarget.value)
           }
-          startSlot={<Search size="1rem" aria-hidden />}
+          endSlot={<Search size="1rem" aria-hidden />}
         />
         {filtersSlot}
         <Button
