@@ -1,0 +1,11 @@
+{
+    "base": "./dist",
+    "files": "**/*.*",
+    "conn_server": "http://gw.dev.erp.idf:8000",
+    "conn_user": "S9034781",
+    "conn_passwlrd": "Lidor12345",
+    "abap_package": "/ATAL/PP_DEV",
+    "abap_bsp": "/ATAL/FOOD_LOG",
+    "abap_bsp_text": "Food Board Log Screen",
+    "abap_transport": "GWDK955071"
+}

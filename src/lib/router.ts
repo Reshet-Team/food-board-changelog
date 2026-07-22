@@ -1,6 +1,8 @@
-import { createRouter } from '@tanstack/react-router'
+import { createHashHistory, createRouter } from '@tanstack/react-router'
 import { routeTree } from '../routeTree.gen'
 import { queryClient } from './queryClient'
+
+const hashHistory = createHashHistory()
 
 export const router = createRouter({
   routeTree,
@@ -8,6 +10,7 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
+  history: hashHistory,
 })
 
 declare module '@tanstack/react-router' {

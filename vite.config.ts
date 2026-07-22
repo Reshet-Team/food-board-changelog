@@ -4,6 +4,7 @@ import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 const config = defineConfig({
+  base: './',
   resolve: { tsconfigPaths: true },
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),

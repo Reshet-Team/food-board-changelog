@@ -22,9 +22,9 @@ export interface FoodLog {
   typeOfChange: string
   material: string
   quantity: number
-  consumptionDateFrom?: Date
-  consumptionDateTo?: Date
-  firstDayInPeriod?: Date
+  consumptionDateFrom?: Date | undefined
+  consumptionDateTo?: Date | undefined
+  firstDayInPeriod?: Date | undefined
   dayInPeriod?: number
   changeDate: Date
   changedBy: string

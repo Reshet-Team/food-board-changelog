@@ -1,11 +1,9 @@
 import type { FoodLog, FoodLogsFilter, RawFoodLog } from '@/features/foodLogs/types/foodLog'
 import { toFoodLog } from '@/features/foodLogs/utils/parseFoodLog'
+import { axiosInstance } from '@/lib/axiosClient'
 import { toSapDate } from '@/utils/date'
 
 export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]> {
-  const baseUrl = import.meta.env.VITE_SAP_API_BASE_URL.replace(/\/+$/, '')
-  const url = new URL(`${baseUrl}/food-logs`)
-
   const { dateFrom, dateTo, consumptionDateFrom, consumptionDateTo, material, changedBy, ...rest } =
     filter
 
@@ -21,21 +19,6 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
     if (consumptionDateTo) body.consumptionDateTo = toSapDate(consumptionDateTo)
   }
 
-  const credentials = btoa(
-    `${import.meta.env.VITE_SAP_USERNAME}:${import.meta.env.VITE_SAP_PASSWORD}`,
-  )
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) throw new Error(`SAP error: ${response.status}`)
-
-  const raw: RawFoodLog[] = await response.json()
-  return raw.map(toFoodLog)
+  const { data } = await axiosInstance.post<RawFoodLog[]>('/food-logs', body)
+  return data.map(toFoodLog)
 }

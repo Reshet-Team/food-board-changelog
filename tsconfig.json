@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.scss"],
   "exclude": ["src/routeTree.gen.ts"],
   "compilerOptions": {
     "target": "ES2022",
