@@ -9,6 +9,7 @@ import {
   matchesChangeTypes,
   type ChangeType,
 } from '@/features/foodLogs/utils/changeType'
+import { getServerMessage } from '@/features/foodLogs/utils/getServerErrorMessage'
 import { useAtomValue } from 'jotai'
 import { SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -34,7 +35,8 @@ export function FoodLogsPage() {
         }
       : null
 
-  const { data, isLoading, isError, isFetching, refetch } = useFoodLogs(filter)
+  const { data, isLoading, isError, isFetching, error, refetch } = useFoodLogs(filter)
+  const errorMessage = getServerMessage(error)
 
   const displayedData = useMemo(() => {
     if (!data || changeTypes.length >= ALL_CHANGE_TYPES.length) return data
@@ -73,6 +75,7 @@ export function FoodLogsPage() {
             data={displayedData}
             isLoading={isLoading}
             isError={isError}
+            errorMessage={errorMessage}
             hasSearched={filter !== null}
             onRetry={() => void refetch()}
             filtersSlot={filtersButton}

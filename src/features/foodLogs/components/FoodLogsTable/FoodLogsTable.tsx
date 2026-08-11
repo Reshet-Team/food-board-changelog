@@ -23,10 +23,18 @@ import styles from './FoodLogsTable.module.scss'
 
 const LOADING_ROWS = 12
 
+// The server sends one comma-separated string: a headline, then what to try next.
+function splitMessage(message: string): [string, string | undefined] {
+  const [title, ...rest] = message.split(',')
+  const description = rest.join(',').trim()
+  return [title?.trim() || message, description || undefined]
+}
+
 export interface FoodLogsTableProps {
   data: FoodLog[] | undefined
   isLoading: boolean
   isError: boolean
+  errorMessage?: string | undefined
 
   hasSearched: boolean
   onRetry: () => void
@@ -38,6 +46,7 @@ export function FoodLogsTable({
   data,
   isLoading,
   isError,
+  errorMessage,
   hasSearched,
   onRetry,
   filtersSlot,
@@ -61,20 +70,28 @@ export function FoodLogsTable({
   }
 
   if (isError) {
+    // TEMPORARY: fallback for when the server sends no message (mock / offline backend).
+    // Delete this fallback once the real API is wired up — errorMessage is always sent then.
+    const [title, description] = errorMessage
+      ? splitMessage(errorMessage)
+      : ['שגיאה בטעינת הנתונים', 'אירעה שגיאה בעת טעינת רשומות השינויים.']
+
     return (
       <div className={styles.stateCard}>
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <TriangleAlert aria-hidden />
+              {errorMessage ? <FileSearch aria-hidden /> : <TriangleAlert aria-hidden />}
             </EmptyMedia>
-            <EmptyTitle>שגיאה בטעינת הנתונים</EmptyTitle>
-            <EmptyDescription>אירעה שגיאה בעת טעינת רשומות השינויים.</EmptyDescription>
+            <EmptyTitle>{title}</EmptyTitle>
+            {description ? <EmptyDescription>{description}</EmptyDescription> : null}
           </EmptyHeader>
-          <Button variant="secondary" onClick={onRetry}>
-            <RotateCw size="1rem" aria-hidden />
-            נסה שוב
-          </Button>
+          {errorMessage ? null : (
+            <Button variant="secondary" onClick={onRetry}>
+              <RotateCw size="1rem" aria-hidden />
+              נסה שוב
+            </Button>
+          )}
         </Empty>
       </div>
     )

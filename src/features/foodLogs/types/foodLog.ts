@@ -21,6 +21,7 @@ export interface AlternativeOption {
 export interface FoodLog {
   typeOfChange: string
   material: string
+  materialDescription: string
   quantity: number
   consumptionDateFrom?: Date | undefined
   consumptionDateTo?: Date | undefined
@@ -36,6 +37,7 @@ export interface FoodLog {
 export interface RawFoodLog {
   typeOfChange: string
   material: string
+  materialDescription: string
   quantity: number
   consumptionDateFrom?: string
   consumptionDateTo?: string

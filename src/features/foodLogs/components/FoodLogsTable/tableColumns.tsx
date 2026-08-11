@@ -66,6 +66,13 @@ export const columns: ColumnDef<FoodLog>[] = [
     meta: { exportValue: (row) => row.material },
   },
   {
+    accessorKey: 'materialDescription',
+    header: 'תיאור חומר',
+    size: 180,
+    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+    meta: { exportValue: (row) => row.materialDescription },
+  },
+  {
     accessorKey: 'quantity',
     header: 'כמות',
     size: 80,

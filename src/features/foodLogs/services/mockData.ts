@@ -9,7 +9,18 @@ const NETWORK_DELAY_MS = 350
 const ROW_COUNT = 45
 const DAY_MS = 86_400_000
 
+// Searching this food board returns no rows, so the empty state can be tested against the mock.
+const EMPTY_RESULT_FOOD_BOARD = '0'
+
 const MATERIALS = ['100001', '100002', '100003', '100004', '100005', '100006']
+const MATERIAL_DESCRIPTIONS: Record<string, string> = {
+  '100001': 'לחם אחיד פרוס',
+  '100002': 'חזה עוף טרי',
+  '100003': 'אורז לבן',
+  '100004': 'שמן זית כתית',
+  '100005': 'גבינה צהובה 28%',
+  '100006': 'עגבניות שרי',
+}
 const USERS = ['דנה כהן', 'יוסי לוי', 'מיכל אברהם', 'רון שפירא', 'נועה מזרחי']
 const FIELDS = ['כמות', 'יחידת מידה', 'מנה', 'הערה']
 // SAP sends I/J for additions and D/E for deletions; anything else counts as an update.
@@ -70,6 +81,8 @@ export async function fetchMockAlternatives(): Promise<AlternativeOption[]> {
 export async function fetchMockFoodLogs(filter: FoodLogsFilter): Promise<RawFoodLog[]> {
   await delay(NETWORK_DELAY_MS)
 
+  if (filter.foodBoard === EMPTY_RESULT_FOOD_BOARD) return []
+
   const random = createRandom(
     seedFrom(
       [
@@ -106,10 +119,12 @@ export async function fetchMockFoodLogs(filter: FoodLogsFilter): Promise<RawFood
     const category = classifyChangeType(code)
     const oldQuantity = String(randomInt(random, 10, 500))
     const newQuantity = String(randomInt(random, 10, 500))
+    const material = pick(materials, random)
 
     return {
       typeOfChange: code,
-      material: pick(materials, random),
+      material,
+      materialDescription: MATERIAL_DESCRIPTIONS[material] ?? `חומר ${material}`,
       quantity: randomInt(random, 10, 500),
       consumptionDateFrom: toSapResponseDate(consumptionFrom),
       consumptionDateTo: toSapResponseDate(consumptionTo),
