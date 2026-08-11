@@ -2,7 +2,7 @@
 
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
 import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/changeType'
-import { formatDateShort, formatTimeShort, toSapDate } from '@/utils/date'
+import { formatDateRange, formatDateShort, formatTimeShort, toSapDate } from '@/utils/date'
 import type { ColumnDef, SortingFn } from '@tanstack/react-table'
 import styles from './FoodLogsTable.module.scss'
 import { ChangeTypeBadge, ConsumptionDateCell, TextCell, ValueChange } from './TableCells'
@@ -39,6 +39,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     size: 100,
     sortingFn: sortByChangeDate,
     cell: ({ row }) => formatDateShort(row.original.changeDate),
+    meta: { exportValue: (row) => formatDateShort(row.changeDate) },
   },
   {
     id: 'changeTime',
@@ -47,6 +48,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     size: 90,
     sortingFn: sortByChangeTime,
     cell: ({ getValue }) => getValue<string>(),
+    meta: { exportValue: (row) => formatTimeShort(row.changeDate) },
   },
   {
     id: 'typeOfChange',
@@ -54,18 +56,21 @@ export const columns: ColumnDef<FoodLog>[] = [
     header: 'סוג שינוי',
     size: 100,
     cell: ({ row }) => <ChangeTypeBadge code={row.original.typeOfChange} />,
+    meta: { exportValue: (row) => changeTypeLabel(row.typeOfChange) },
   },
   {
     accessorKey: 'material',
     header: 'חומר',
     size: 104,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+    meta: { exportValue: (row) => row.material },
   },
   {
     accessorKey: 'quantity',
     header: 'כמות',
     size: 80,
     cell: ({ getValue }) => <TextCell value={String(getValue<number>())} />,
+    meta: { exportValue: (row) => row.quantity },
   },
   {
     id: 'consumptionDate',
@@ -80,6 +85,9 @@ export const columns: ColumnDef<FoodLog>[] = [
         to={row.original.consumptionDateTo}
       />
     ),
+    meta: {
+      exportValue: (row) => formatDateRange(row.consumptionDateFrom, row.consumptionDateTo),
+    },
   },
   {
     id: 'firstDayInPeriod',
@@ -88,6 +96,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     size: 130,
     sortingFn: sortByFirstDayInPeriod,
     cell: ({ row }) => formatDateShort(row.original.firstDayInPeriod),
+    meta: { exportValue: (row) => formatDateShort(row.firstDayInPeriod) },
   },
   {
     id: 'dayInPeriod',
@@ -96,18 +105,21 @@ export const columns: ColumnDef<FoodLog>[] = [
     size: 100,
     sortingFn: sortByDayInPeriod,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+    meta: { exportValue: (row) => row.dayInPeriod ?? '' },
   },
   {
     accessorKey: 'changedBy',
     header: 'שונה ע"י',
     size: 110,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+    meta: { exportValue: (row) => row.changedBy },
   },
   {
     accessorKey: 'field',
     header: 'שדה',
     size: 90,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
+    meta: { exportValue: (row) => row.field },
   },
   {
     id: 'valueChange',
@@ -124,6 +136,12 @@ export const columns: ColumnDef<FoodLog>[] = [
         return <TextCell value={row.original.newValue} className={styles.newValue} />
       }
       return <ValueChange oldValue={row.original.oldValue} newValue={row.original.newValue} />
+    },
+    meta: {
+      exportColumns: [
+        { header: 'ערך ישן', value: (row) => row.oldValue },
+        { header: 'ערך חדש', value: (row) => row.newValue },
+      ],
     },
   },
 ]

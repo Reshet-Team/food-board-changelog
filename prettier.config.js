@@ -7,6 +7,7 @@ const config = {
   singleQuote: true,
   trailingComma: 'all',
   plugins: ['prettier-plugin-organize-imports'],
+  endOfLine: 'lf',
 }
 
 export default config

@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+// Serve in-memory fixtures instead of calling a backend. Useful off-network.
+export const USE_MOCK_DATA = true
+
 // Toggle backend target with a single change:
 //   true  -> local NestJS backend (http://localhost:3000)
 //   false -> original SAP / proxy backend

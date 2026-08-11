@@ -36,11 +36,7 @@ export function FoodLogsTableToolbar({ filtersSlot }: FoodLogsTableToolbarProps)
           endSlot={<Search size="1rem" aria-hidden />}
         />
         {filtersSlot}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => exportExcel(filteredRows.map((row) => row.original))}
-        >
+        <Button variant="secondary" size="sm" onClick={() => void exportExcel(table)}>
           <FileSpreadsheet size="1rem" aria-hidden />
           ייצוא לאקסל
         </Button>

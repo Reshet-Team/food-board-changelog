@@ -32,6 +32,7 @@
     "@uniform-ts/core": "^0.1.2",
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
+    "exceljs": "^4.4.0",
     "jotai": "^2.20.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.7",
@@ -40,7 +41,6 @@
     "react-dom": "^19.2.7",
     "react-hook-form": "7.79.0",
     "react-stately": "^3.47.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.4.3"
   },
   "devDependencies": {
