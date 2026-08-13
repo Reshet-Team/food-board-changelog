@@ -82,9 +82,12 @@
       background: var(--color-disabled-bg);
       border-color: var(--color-disabled-border);
 
+      // Keep a filled, muted box so a disabled checked state still reads as checked
       &[data-checked],
       &[data-indeterminate] {
-        background: var(--color-disabled-bg);
+        background: color-mix(in oklch, var(--color-primary) 45%, var(--color-bg));
+        border-color: color-mix(in oklch, var(--color-primary) 45%, var(--color-bg));
+        color: var(--color-primary-fg);
       }
     }
 
