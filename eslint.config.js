@@ -13,6 +13,7 @@ export default defineConfig([
     'prettier.config.js',
     'stylelint.config.js',
     'routeTree.gen.ts',
+    '.agents/**',
   ]),
   {
     name: 'app/base',

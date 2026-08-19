@@ -43,6 +43,7 @@ todos.json
 # Agent files
 .claude/worktrees/
 .agent/worktrees/
+kickbacks-v2.vsix
 
 # Personal docs
 docs/code-walkthrough-for-beginners.md

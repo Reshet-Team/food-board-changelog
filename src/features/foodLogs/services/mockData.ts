@@ -1,5 +1,6 @@
 import type {
   AlternativeOption,
+  FoodBoardOption,
   FoodLogsFilter,
   RawFoodLog,
 } from '@/features/foodLogs/types/foodLog'
@@ -33,6 +34,15 @@ export const mockAlternatives: AlternativeOption[] = [
   { value: '03', type: '2', description: 'תפריט חורף' },
   { value: '04', type: '6', description: 'תפריט יומי מיוחד' },
   { value: '05', type: '3', description: 'תפריט קיץ' },
+]
+
+export const mockFoodBoards: FoodBoardOption[] = [
+  { material: EMPTY_RESULT_FOOD_BOARD },
+  { material: '200001' },
+  { material: '200002' },
+  { material: '200003' },
+  { material: '200004' },
+  { material: '200005' },
 ]
 
 function delay(ms: number): Promise<void> {
@@ -76,6 +86,11 @@ function toSapResponseDate(date: Date): string {
 export async function fetchMockAlternatives(): Promise<AlternativeOption[]> {
   await delay(NETWORK_DELAY_MS)
   return mockAlternatives
+}
+
+export async function fetchMockFoodBoards(): Promise<FoodBoardOption[]> {
+  await delay(NETWORK_DELAY_MS)
+  return mockFoodBoards
 }
 
 export async function fetchMockFoodLogs(filter: FoodLogsFilter): Promise<RawFoodLog[]> {

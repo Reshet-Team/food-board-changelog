@@ -7,7 +7,8 @@ import {
 import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
-import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
+import { useFoodBoards } from '@/features/foodLogs/hooks/useFoodBoards'
+import type { AlternativeOption, FoodBoardOption } from '@/features/foodLogs/types/foodLog'
 import type { FieldProps, FieldWrapperProps } from '@uniform-ts/core'
 import { useAutoFormContext } from '@uniform-ts/core'
 import { useWatch } from 'react-hook-form'
@@ -68,19 +69,38 @@ export function StringInput({ value, onChange, onBlur, ref }: FieldProps) {
   )
 }
 
-export function NumericInput({ value, onChange, onBlur, ref }: FieldProps) {
+export function FoodBoardSelect({ value, onChange, onBlur }: FieldProps) {
+  const { data: foodBoards, isLoading } = useFoodBoards()
+  const options = foodBoards ?? []
+  const current = (value as string | undefined) ?? ''
+
+  const selectedOption = options.find((option) => option.material === current) ?? null
+
   return (
-    <Input
-      ref={ref as React.Ref<HTMLInputElement>}
-      inputMode="numeric"
-      autoComplete="off"
-      value={(value as string | undefined) ?? ''}
-      onChange={(e) => {
-        const digits = e.target.value.replace(/\D/g, '')
-        onChange(digits)
+    <ComboboxRoot<FoodBoardOption>
+      items={options}
+      value={selectedOption}
+      onValueChange={(next: FoodBoardOption | null) => {
+        onChange(next?.material ?? '')
+        onBlur()
       }}
-      onBlur={onBlur}
-    />
+      itemToStringLabel={(option: FoodBoardOption) => option.material}
+      itemToStringValue={(option: FoodBoardOption) => option.material}
+      disabled={isLoading}
+    >
+      <ComboboxInput
+        size="md"
+        placeholder={isLoading ? 'טוען…' : 'בחר לוח מזון'}
+        inputProps={{ onBlur: () => onBlur() }}
+      />
+      <ComboboxList<FoodBoardOption> emptyMessage="לא נמצאו לוחות מזון">
+        {(option: FoodBoardOption) => (
+          <ComboboxItem key={option.material} value={option}>
+            {option.material}
+          </ComboboxItem>
+        )}
+      </ComboboxList>
+    </ComboboxRoot>
   )
 }
 

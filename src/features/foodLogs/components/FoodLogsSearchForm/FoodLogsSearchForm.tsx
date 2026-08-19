@@ -11,8 +11,8 @@ import {
 } from '@/features/foodLogs/components/FoodLogsSearchForm/DateRangeFields'
 import {
   AlternativeSelect,
+  FoodBoardSelect,
   FormFieldWrapper,
-  NumericInput,
   StringInput,
 } from '@/features/foodLogs/components/FoodLogsSearchForm/SearchFormFields'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
@@ -117,7 +117,7 @@ export function FoodLogsSearchForm({
           fieldWrapper={FormFieldWrapper}
           components={{ string: StringInput }}
           fields={{
-            foodBoard: { label: 'לוח מזון', component: NumericInput },
+            foodBoard: { label: 'לוח מזון', component: FoodBoardSelect },
             alternative: {
               label: 'חלופה',
               component: AlternativeSelect,

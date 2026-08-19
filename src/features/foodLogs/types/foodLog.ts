@@ -18,6 +18,10 @@ export interface AlternativeOption {
   description: string
 }
 
+export interface FoodBoardOption {
+  material: string
+}
+
 export interface FoodLog {
   typeOfChange: string
   material: string

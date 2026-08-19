@@ -17,7 +17,8 @@ export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]>
   body.dateTo = toSapDate(dateTo)
 
   if (material?.length) body.material = material
-  if (changedBy?.length) body.changedBy = changedBy
+  // SAP stores usernames uppercase ("S123456"), so a lowercase filter finds nothing.
+  if (changedBy?.length) body.changedBy = changedBy.map((user) => user.toUpperCase())
 
   if (consumptionDateFrom) {
     body.consumptionDateFrom = toSapDate(consumptionDateFrom)
