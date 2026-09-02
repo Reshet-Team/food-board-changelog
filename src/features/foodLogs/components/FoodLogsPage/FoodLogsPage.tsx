@@ -35,7 +35,7 @@ export function FoodLogsPage() {
         }
       : null
 
-  const { data, isLoading, isError, isFetching, error, refetch } = useFoodLogs(filter)
+  const { data, isLoading, isError, isFetching, error } = useFoodLogs(filter)
   const errorMessage = getServerMessage(error)
 
   const displayedData = useMemo(() => {
@@ -77,7 +77,6 @@ export function FoodLogsPage() {
             isError={isError}
             errorMessage={errorMessage}
             hasSearched={filter !== null}
-            onRetry={() => void refetch()}
             filtersSlot={filtersButton}
           />
         </main>

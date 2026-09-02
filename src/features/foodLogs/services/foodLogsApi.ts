@@ -1,14 +1,9 @@
-import { fetchMockFoodLogs } from '@/features/foodLogs/services/mockData'
 import type { FoodLog, FoodLogsFilter, RawFoodLog } from '@/features/foodLogs/types/foodLog'
 import { toFoodLog } from '@/features/foodLogs/utils/parseFoodLog'
-import { USE_MOCK_DATA } from '@/lib/api.utilities'
 import { axiosInstance } from '@/lib/axiosClient'
 import { toSapDate } from '@/utils/date'
 
 export async function searchFoodLogs(filter: FoodLogsFilter): Promise<FoodLog[]> {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (USE_MOCK_DATA) return (await fetchMockFoodLogs(filter)).map(toFoodLog)
-
   const { dateFrom, dateTo, consumptionDateFrom, consumptionDateTo, material, changedBy, ...rest } =
     filter
 

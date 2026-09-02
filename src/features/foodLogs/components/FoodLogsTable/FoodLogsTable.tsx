@@ -1,6 +1,5 @@
 'use no memo'
 
-import { Button } from '@/components/ui/Button/Button'
 import {
   DataTableBody,
   DataTableContent,
@@ -17,7 +16,7 @@ import {
 import { FoodLogsTableToolbar } from '@/features/foodLogs/components/FoodLogsTable/FoodLogsTableToolbar'
 import { columns } from '@/features/foodLogs/components/FoodLogsTable/tableColumns'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
-import { FileSearch, RotateCw, TriangleAlert } from 'lucide-react'
+import { FileSearch } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import styles from './FoodLogsTable.module.scss'
 
@@ -34,10 +33,9 @@ export interface FoodLogsTableProps {
   data: FoodLog[] | undefined
   isLoading: boolean
   isError: boolean
-  errorMessage?: string | undefined
+  errorMessage: string
 
   hasSearched: boolean
-  onRetry: () => void
 
   filtersSlot?: ReactNode
 }
@@ -48,7 +46,6 @@ export function FoodLogsTable({
   isError,
   errorMessage,
   hasSearched,
-  onRetry,
   filtersSlot,
 }: FoodLogsTableProps) {
   const rows = useMemo(() => data ?? [], [data])
@@ -70,28 +67,18 @@ export function FoodLogsTable({
   }
 
   if (isError) {
-    // TEMPORARY: fallback for when the server sends no message (mock / offline backend).
-    // Delete this fallback once the real API is wired up — errorMessage is always sent then.
-    const [title, description] = errorMessage
-      ? splitMessage(errorMessage)
-      : ['שגיאה בטעינת הנתונים', 'אירעה שגיאה בעת טעינת רשומות השינויים.']
+    const [title, description] = splitMessage(errorMessage)
 
     return (
       <div className={styles.stateCard}>
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              {errorMessage ? <FileSearch aria-hidden /> : <TriangleAlert aria-hidden />}
+              <FileSearch aria-hidden />
             </EmptyMedia>
             <EmptyTitle>{title}</EmptyTitle>
             {description ? <EmptyDescription>{description}</EmptyDescription> : null}
           </EmptyHeader>
-          {errorMessage ? null : (
-            <Button variant="secondary" onClick={onRetry}>
-              <RotateCw size="1rem" aria-hidden />
-              נסה שוב
-            </Button>
-          )}
         </Empty>
       </div>
     )
