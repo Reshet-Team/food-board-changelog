@@ -14,39 +14,46 @@ export function DataTableHeader() {
       className={styles.tableHeader}
       data-virtualized={enableVirtualization}
     >
-      {table.getHeaderGroups().map((headerGroup) => (
-        <TablePrimitive.TableRow
-          key={headerGroup.id}
-          className={styles.tableRow}
-          data-virtualized={enableVirtualization}
-        >
-          {headerGroup.headers.map((header) => (
-            <TablePrimitive.TableHead
-              key={header.id}
-              className={styles.tableHead}
-              data-column-id={header.column.id}
-              data-virtualized={enableVirtualization}
-              aria-sort={
-                header.column.getIsSorted() === 'asc'
-                  ? 'ascending'
-                  : header.column.getIsSorted() === 'desc'
-                    ? 'descending'
-                    : undefined
-              }
-              style={{
-                flex: enableVirtualization ? `var(--header-${header.id}-size)` : undefined,
-                width: !enableVirtualization ? header.getSize() : undefined,
-              }}
-            >
-              {header.isPlaceholder ? null : (
-                <ColumnHeader column={header.column}>
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </ColumnHeader>
-              )}
-            </TablePrimitive.TableHead>
-          ))}
-        </TablePrimitive.TableRow>
-      ))}
+      {table.getHeaderGroups().map((headerGroup) => {
+        // Column sizes are ratios, not pixels: percentages let the table scale with its container.
+        const totalSize = headerGroup.headers.reduce((sum, header) => sum + header.getSize(), 0)
+
+        return (
+          <TablePrimitive.TableRow
+            key={headerGroup.id}
+            className={styles.tableRow}
+            data-virtualized={enableVirtualization}
+          >
+            {headerGroup.headers.map((header) => (
+              <TablePrimitive.TableHead
+                key={header.id}
+                className={styles.tableHead}
+                data-column-id={header.column.id}
+                data-virtualized={enableVirtualization}
+                aria-sort={
+                  header.column.getIsSorted() === 'asc'
+                    ? 'ascending'
+                    : header.column.getIsSorted() === 'desc'
+                      ? 'descending'
+                      : undefined
+                }
+                style={{
+                  flex: enableVirtualization ? `var(--header-${header.id}-size)` : undefined,
+                  width: enableVirtualization
+                    ? undefined
+                    : `${((header.getSize() / totalSize) * 100).toFixed(4)}%`,
+                }}
+              >
+                {header.isPlaceholder ? null : (
+                  <ColumnHeader column={header.column}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </ColumnHeader>
+                )}
+              </TablePrimitive.TableHead>
+            ))}
+          </TablePrimitive.TableRow>
+        )
+      })}
     </TablePrimitive.TableHeader>
   )
 }

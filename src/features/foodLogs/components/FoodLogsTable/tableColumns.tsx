@@ -31,12 +31,13 @@ const sortByFirstDayInPeriod: SortingFn<FoodLog> = (a, b) =>
 const sortByDayInPeriod: SortingFn<FoodLog> = (a, b) =>
   (a.original.dayInPeriod ?? 0) - (b.original.dayInPeriod ?? 0)
 
+// Column sizes are relative ratios, not pixels: the table scales them to fit its container.
 export const columns: ColumnDef<FoodLog>[] = [
   {
     id: 'changeDate',
     accessorFn: (row) => dateSearchText(row.changeDate),
     header: 'תאריך שינוי',
-    size: 100,
+    size: 146,
     sortingFn: sortByChangeDate,
     cell: ({ row }) => formatDateShort(row.original.changeDate),
     meta: { exportValue: (row) => formatDateShort(row.changeDate) },
@@ -45,7 +46,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     id: 'changeTime',
     accessorFn: (row) => formatTimeShort(row.changeDate),
     header: 'שעת שינוי',
-    size: 90,
+    size: 112,
     sortingFn: sortByChangeTime,
     cell: ({ getValue }) => getValue<string>(),
     meta: { exportValue: (row) => formatTimeShort(row.changeDate) },
@@ -54,21 +55,21 @@ export const columns: ColumnDef<FoodLog>[] = [
     id: 'typeOfChange',
     accessorFn: (row) => changeTypeLabel(row.typeOfChange),
     header: 'סוג שינוי',
-    size: 100,
+    size: 106,
     cell: ({ row }) => <ChangeTypeBadge code={row.original.typeOfChange} />,
     meta: { exportValue: (row) => changeTypeLabel(row.typeOfChange) },
   },
   {
     accessorKey: 'material',
     header: 'חומר',
-    size: 104,
+    size: 109,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
     meta: { exportValue: (row) => row.material },
   },
   {
     accessorKey: 'materialDescription',
     header: 'תיאור חומר',
-    size: 180,
+    size: 149,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
     meta: { exportValue: (row) => row.materialDescription },
   },
@@ -84,7 +85,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     accessorFn: (row) =>
       `${dateSearchText(row.consumptionDateFrom)} ${dateSearchText(row.consumptionDateTo)}`.trim(),
     header: 'תאריך צריכה',
-    size: 230,
+    size: 159,
     sortingFn: sortByConsumptionDate,
     cell: ({ row }) => (
       <ConsumptionDateCell
@@ -100,7 +101,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     id: 'firstDayInPeriod',
     accessorFn: (row) => dateSearchText(row.firstDayInPeriod),
     header: 'יום ראשון בתקופה',
-    size: 130,
+    size: 168,
     sortingFn: sortByFirstDayInPeriod,
     cell: ({ row }) => formatDateShort(row.original.firstDayInPeriod),
     meta: { exportValue: (row) => formatDateShort(row.firstDayInPeriod) },
@@ -109,7 +110,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     id: 'dayInPeriod',
     accessorFn: (row) => (row.dayInPeriod == null ? '' : String(row.dayInPeriod)),
     header: 'יום בתקופה',
-    size: 100,
+    size: 122,
     sortingFn: sortByDayInPeriod,
     cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
     meta: { exportValue: (row) => row.dayInPeriod ?? '' },
@@ -132,7 +133,7 @@ export const columns: ColumnDef<FoodLog>[] = [
     id: 'valueChange',
     accessorFn: (row) => `${row.oldValue} ${row.newValue}`,
     header: 'שינוי ערך',
-    size: 175,
+    size: 138,
     enableSorting: false,
     cell: ({ row }) => {
       const category = classifyChangeType(row.original.typeOfChange)

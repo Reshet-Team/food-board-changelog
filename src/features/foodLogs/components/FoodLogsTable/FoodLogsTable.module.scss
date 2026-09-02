@@ -50,7 +50,7 @@
 
   .searchInput {
     flex: 0 1 18rem;
-    min-width: 20rem;
+    min-width: 10rem;
     margin-inline-start: var(--scrollbar-size);
   }
 
@@ -60,17 +60,19 @@
     display: flex;
     flex-direction: column;
 
+    // LTR only on the scroll container so its vertical scrollbar renders on the right.
+    // The table below stays RTL, and its horizontal overflow now grows rightwards, so it
+    // stays reachable by scrolling.
     > div:not(.tableToolbar) {
       flex: 1;
       min-height: 0;
       overflow: auto;
-
       direction: ltr;
+
       scrollbar-gutter: stable;
       padding-inline: var(--space-4);
 
       > div {
-        direction: rtl;
         overflow: visible;
       }
     }
@@ -82,9 +84,12 @@
       background: var(--color-bg);
     }
 
+    // Fixed layout turns the per-column pixel widths into ratios that scale with the container.
     table {
-      table-layout: auto;
+      direction: rtl;
+      table-layout: fixed;
       width: 100%;
+      min-width: 60rem;
     }
 
     th,
@@ -96,6 +101,14 @@
 
     th > div {
       justify-content: center;
+    }
+
+    // Header labels sit in a flex button that would otherwise refuse to wrap and clip instead.
+    th button {
+      min-width: 0;
+      height: auto;
+      white-space: normal;
+      text-align: center;
     }
   }
 
