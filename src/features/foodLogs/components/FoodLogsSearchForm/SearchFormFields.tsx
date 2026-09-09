@@ -8,7 +8,7 @@ import { FieldLabel, FieldRoot } from '@/components/ui/Field/Field'
 import { Input } from '@/components/ui/Input/Input'
 import { useAlternatives } from '@/features/foodLogs/hooks/useAlternatives'
 import { useFoodBoards } from '@/features/foodLogs/hooks/useFoodBoards'
-import type { AlternativeOption, FoodBoardOption } from '@/features/foodLogs/types/foodLog'
+import type { AlternativeOption } from '@/features/foodLogs/types/foodLog'
 import type { FieldProps, FieldWrapperProps } from '@uniform-ts/core'
 import { useAutoFormContext } from '@uniform-ts/core'
 import { useWatch } from 'react-hook-form'
@@ -74,18 +74,16 @@ export function FoodBoardSelect({ value, onChange, onBlur }: FieldProps) {
   const options = foodBoards ?? []
   const current = (value as string | undefined) ?? ''
 
-  const selectedOption = options.find((option) => option.material === current) ?? null
+  const selectedOption = options.includes(current) ? current : null
 
   return (
-    <ComboboxRoot<FoodBoardOption>
+    <ComboboxRoot<string>
       items={options}
       value={selectedOption}
-      onValueChange={(next: FoodBoardOption | null) => {
-        onChange(next?.material ?? '')
+      onValueChange={(next: string | null) => {
+        onChange(next ?? '')
         onBlur()
       }}
-      itemToStringLabel={(option: FoodBoardOption) => option.material}
-      itemToStringValue={(option: FoodBoardOption) => option.material}
       disabled={isLoading}
     >
       <ComboboxInput
@@ -93,10 +91,10 @@ export function FoodBoardSelect({ value, onChange, onBlur }: FieldProps) {
         placeholder={isLoading ? 'טוען…' : 'בחר לוח מזון'}
         inputProps={{ onBlur: () => onBlur() }}
       />
-      <ComboboxList<FoodBoardOption> emptyMessage="לא נמצאו לוחות מזון">
-        {(option: FoodBoardOption) => (
-          <ComboboxItem key={option.material} value={option}>
-            {option.material}
+      <ComboboxList<string> emptyMessage="לא נמצאו לוחות מזון">
+        {(option: string) => (
+          <ComboboxItem key={option} value={option}>
+            {option}
           </ComboboxItem>
         )}
       </ComboboxList>
