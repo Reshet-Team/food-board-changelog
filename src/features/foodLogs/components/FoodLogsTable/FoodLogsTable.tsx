@@ -16,24 +16,18 @@ import {
 import { FoodLogsTableToolbar } from '@/features/foodLogs/components/FoodLogsTable/FoodLogsTableToolbar'
 import { columns } from '@/features/foodLogs/components/FoodLogsTable/tableColumns'
 import type { FoodLog } from '@/features/foodLogs/types/foodLog'
+import type { ServerMessage } from '@/features/foodLogs/utils/getServerErrorMessage'
 import { FileSearch } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import styles from './FoodLogsTable.module.scss'
 
 const LOADING_ROWS = 12
 
-// The server sends one comma-separated string: a headline, then what to try next.
-function splitMessage(message: string): [string, string | undefined] {
-  const [title, ...rest] = message.split(',')
-  const description = rest.join(',').trim()
-  return [title?.trim() || message, description || undefined]
-}
-
 export interface FoodLogsTableProps {
   data: FoodLog[] | undefined
   isLoading: boolean
   isError: boolean
-  errorMessage: string
+  errorMessage: ServerMessage
 
   hasSearched: boolean
 
@@ -67,8 +61,6 @@ export function FoodLogsTable({
   }
 
   if (isError) {
-    const [title, description] = splitMessage(errorMessage)
-
     return (
       <div className={styles.stateCard}>
         <Empty>
@@ -76,8 +68,10 @@ export function FoodLogsTable({
             <EmptyMedia variant="icon">
               <FileSearch aria-hidden />
             </EmptyMedia>
-            <EmptyTitle>{title}</EmptyTitle>
-            {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+            <EmptyTitle>{errorMessage.title}</EmptyTitle>
+            {errorMessage.description ? (
+              <EmptyDescription>{errorMessage.description}</EmptyDescription>
+            ) : null}
           </EmptyHeader>
         </Empty>
       </div>

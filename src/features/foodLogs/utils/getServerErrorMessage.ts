@@ -1,13 +1,20 @@
-import axios from 'axios'
+// Written in the same comma-separated shape the service uses.
+const GENERIC_MESSAGE = 'שגיאה בטעינת הנתונים, אירעה שגיאה בעת טעינת רשומות השינויים.'
 
-// The search answers with an array of rows, or fails with a plain string explaining why there are none.
-// An unreachable backend answers with the SPA's HTML, which is a string too.
-export function getServerMessage(error: unknown): string {
-  if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
-    const message = error.response.data.trim()
-    if (message) return message
-  }
+// Thrown when the service explains in words why it has no rows, instead of returning them.
+export class ServerMessageError extends Error {}
 
-  // Network / transport failures never reach the service, so there is no server text to show.
-  return 'שגיאה בטעינת הנתונים, אירעה שגיאה בעת טעינת רשומות השינויים.'
+export interface ServerMessage {
+  title: string
+  description?: string
+}
+
+// The service sends one comma-separated line: a headline, then what to try next.
+export function getServerMessage(error: unknown): ServerMessage {
+  const text = error instanceof ServerMessageError ? error.message.trim() : ''
+  // An unreachable backend answers with the SPA's HTML, which is no use to the user.
+  const message = text && !text.startsWith('<') ? text : GENERIC_MESSAGE
+
+  const [title = message, description] = message.split(',')
+  return { title: title.trim(), ...(description && { description: description.trim() }) }
 }
