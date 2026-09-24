@@ -84,6 +84,7 @@ export function FoodBoardSelect({ value, onChange, onBlur }: FieldProps) {
         onChange(next ?? '')
         onBlur()
       }}
+      autoHighlight
       disabled={isLoading}
     >
       <ComboboxInput
@@ -121,6 +122,7 @@ export function AlternativeSelect({ value, onChange, onBlur }: FieldProps) {
       }}
       itemToStringLabel={(option: AlternativeOption) => formatOption(option)}
       itemToStringValue={(option: AlternativeOption) => option.value}
+      autoHighlight
       disabled={isLoading}
     >
       <ComboboxInput
