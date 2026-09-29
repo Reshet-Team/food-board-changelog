@@ -13,32 +13,22 @@ import type { FieldProps, FieldWrapperProps } from '@uniform-ts/core'
 import { useAutoFormContext } from '@uniform-ts/core'
 import { useWatch } from 'react-hook-form'
 import styles from './FoodLogsSearchForm.module.scss'
-import { isDailyAlternative, validateDateRange } from './searchRules'
+import { validateDateRange } from './searchRules'
 
 const REQUIRED_FIELDS = new Set(['foodBoard', 'alternative', 'dateFrom'])
 
 export function FormFieldWrapper({ children, field, error }: FieldWrapperProps) {
   const { control } = useAutoFormContext()
-  const { data: alternatives } = useAlternatives()
-
-  const alternative = useWatch({ control, name: 'alternative' }) as string | undefined
-  const consumptionEnabled = isDailyAlternative(alternative ?? '', alternatives ?? [])
 
   const dateFrom = useWatch({ control, name: 'dateFrom' }) as Date | undefined
   const dateTo = useWatch({ control, name: 'dateTo' }) as Date | undefined
-  const consumptionFrom = useWatch({ control, name: 'consumptionDateFrom' }) as Date | undefined
 
-  const isRequired =
-    REQUIRED_FIELDS.has(field.name) || (field.name === 'consumptionDateFrom' && consumptionEnabled)
+  const isRequired = REQUIRED_FIELDS.has(field.name)
   const label = field.meta.label ?? field.label
 
   let displayError = error
   if (field.name === 'dateFrom') {
     displayError = validateDateRange(dateFrom, dateTo) ?? error
-  }
-  if (field.name === 'consumptionDateFrom') {
-    displayError =
-      (consumptionEnabled && !consumptionFrom ? 'יש לבחור טווח תאריכי צריכה' : null) ?? error
   }
   return (
     <FieldRoot>

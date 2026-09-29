@@ -55,18 +55,13 @@ export function FoodLogsSearchForm({
 
   const [values, setValues] = useState<FoodLogsSearchParams>(defaultValues)
 
-  const consumptionEnabled = isDailyAlternative(values.alternative, alternatives ?? [])
   const rangeError = validateDateRange(values.dateFrom, values.dateTo)
-  const consumptionMissing =
-    consumptionEnabled && !(values.consumptionDateFrom && values.consumptionDateTo)
 
-  const isDisabled =
-    !(values.foodBoard && values.alternative) || rangeError !== null || consumptionMissing
+  const isDisabled = !(values.foodBoard && values.alternative) || rangeError !== null
 
   function handleSubmit(data: FoodLogsSearchParams) {
     if (validateDateRange(data.dateFrom, data.dateTo)) return
     const daily = isDailyAlternative(data.alternative, alternatives ?? [])
-    if (daily && !(data.consumptionDateFrom && data.consumptionDateTo)) return
     setFilter({
       ...data,
 
