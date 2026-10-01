@@ -5,11 +5,22 @@ import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/c
 import { formatDateRange, formatDateShort, formatTimeShort, toSapDate } from '@/utils/date'
 import type { ColumnDef, SortingFn } from '@tanstack/react-table'
 import styles from './FoodLogsTable.module.scss'
-import { ChangeTypeBadge, ConsumptionDateCell, TextCell, ValueChange } from './TableCells'
+import { ChangeTypeBadge, RangeCell, TextCell, ValueChange } from './TableCells'
 
 function dateSearchText(date: Date | undefined): string {
   if (!date) return ''
   return `${formatDateShort(date)} ${toSapDate(date)}`
+}
+
+/** SAP sends 0 for "no day in period", which should read as empty. */
+function numberText(value: number | undefined): string {
+  return value ? String(value) : ''
+}
+
+function formatNumberRange(from: number | undefined, to: number | undefined): string {
+  if (!from) return ''
+  if (!to) return String(from)
+  return `${from} - ${to}`
 }
 
 const sortByChangeDate: SortingFn<FoodLog> = (a, b) =>
@@ -29,7 +40,7 @@ const sortByFirstDayInPeriod: SortingFn<FoodLog> = (a, b) =>
   (a.original.firstDayInPeriod?.getTime() ?? 0) - (b.original.firstDayInPeriod?.getTime() ?? 0)
 
 const sortByDayInPeriod: SortingFn<FoodLog> = (a, b) =>
-  (a.original.dayInPeriod ?? 0) - (b.original.dayInPeriod ?? 0)
+  (a.original.dayInPeriodFrom ?? 0) - (b.original.dayInPeriodFrom ?? 0)
 
 // Column sizes are relative ratios, not pixels: the table scales them to fit its container.
 export const columns: ColumnDef<FoodLog>[] = [
@@ -88,9 +99,9 @@ export const columns: ColumnDef<FoodLog>[] = [
     size: 159,
     sortingFn: sortByConsumptionDate,
     cell: ({ row }) => (
-      <ConsumptionDateCell
-        from={row.original.consumptionDateFrom}
-        to={row.original.consumptionDateTo}
+      <RangeCell
+        from={formatDateShort(row.original.consumptionDateFrom)}
+        to={formatDateShort(row.original.consumptionDateTo)}
       />
     ),
     meta: {
@@ -108,12 +119,20 @@ export const columns: ColumnDef<FoodLog>[] = [
   },
   {
     id: 'dayInPeriod',
-    accessorFn: (row) => (row.dayInPeriod == null ? '' : String(row.dayInPeriod)),
+    accessorFn: (row) =>
+      `${numberText(row.dayInPeriodFrom)} ${numberText(row.dayInPeriodTo)}`.trim(),
     header: 'יום בתקופה',
     size: 122,
     sortingFn: sortByDayInPeriod,
-    cell: ({ getValue }) => <TextCell value={getValue<string>()} />,
-    meta: { exportValue: (row) => row.dayInPeriod ?? '' },
+    cell: ({ row }) => (
+      <RangeCell
+        from={numberText(row.original.dayInPeriodFrom)}
+        to={numberText(row.original.dayInPeriodTo)}
+      />
+    ),
+    meta: {
+      exportValue: (row) => formatNumberRange(row.dayInPeriodFrom, row.dayInPeriodTo),
+    },
   },
   {
     accessorKey: 'changedBy',

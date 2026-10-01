@@ -3,25 +3,18 @@
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '@/components/ui/Tooltip/Tooltip'
 import { changeTypeLabel, classifyChangeType } from '@/features/foodLogs/utils/changeType'
 import { useResizeObserver } from '@/hooks/useResizeObserver'
-import { formatDateShort } from '@/utils/date'
 import clsx from 'clsx'
 import { ArrowLeft } from 'lucide-react'
 import { useRef, useState } from 'react'
 import styles from './FoodLogsTable.module.scss'
 
-export function ConsumptionDateCell({
-  from,
-  to,
-}: {
-  from?: Date | undefined
-  to?: Date | undefined
-}) {
-  if (!from) return formatDateShort(to)
-  if (!to) return formatDateShort(from)
+export function RangeCell({ from, to }: { from?: string | undefined; to?: string | undefined }) {
+  if (!from) return ''
+  if (!to) return from
   return (
     <span className={styles.dateRange}>
-      <span>{formatDateShort(from)}</span>
-      <span className={styles.dateRangeTo}>{formatDateShort(to)}</span>
+      <span>{from}</span>
+      <span className={styles.dateRangeTo}>{to}</span>
     </span>
   )
 }

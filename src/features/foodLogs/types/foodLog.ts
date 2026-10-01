@@ -26,7 +26,8 @@ export interface FoodLog {
   consumptionDateFrom?: Date | undefined
   consumptionDateTo?: Date | undefined
   firstDayInPeriod?: Date | undefined
-  dayInPeriod?: number
+  dayInPeriodFrom?: number
+  dayInPeriodTo?: number
   changeDate: Date
   changedBy: string
   field: string
@@ -42,7 +43,8 @@ export interface RawFoodLog {
   consumptionDateFrom?: string
   consumptionDateTo?: string
   firstDay?: string
-  dayInPeriod?: number
+  dayInPeriodFrom?: number
+  dayInPeriodTo?: number
   changeDate: string
   changeTime: string
   changedBy: string
